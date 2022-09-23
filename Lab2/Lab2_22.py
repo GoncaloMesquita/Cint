@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Created on  September 27 2019
 
@@ -69,3 +70,44 @@ plt.show()
 
 end=0
 
+
+## Exercise 4
+
+from statistics import mean 
+from statistics import stdev
+
+data = pd.read_csv('DCOILBRENTEUv2.csv')
+
+#Normalization 
+
+data_max = max(data['DCOILBRENTEU'])
+data_min= min(data['DCOILBRENTEU'])
+
+data_normalization = (data['DCOILBRENTEU'] - data_min)/(data_max-data_min)
+plt.plot(data_normalization)
+plt.show()
+ 
+#Standirzation
+
+media = mean(data['DCOILBRENTEU'])
+standard_dev =stdev(data['DCOILBRENTEU'])
+
+zero_score = (data['DCOILBRENTEU']-media)/standard_dev
+plt.plot(zero_score)
+plt.show()
+
+# Moving average
+#%% 
+
+N = 50 
+i=0
+moving_averages = []
+while i < len(data_normalization) - N +1:
+
+	data_moving = data_normalization[i:N+i]
+	data_mean_mov = data_moving.mean()
+	moving_averages.append(data_mean_mov)
+	i +=1
+print(moving_averages)
+plt.plot(moving_averages)
+plt.show()

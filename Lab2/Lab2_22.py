@@ -111,3 +111,5 @@ while i < len(data_normalization) - N +1:
 print(moving_averages)
 plt.plot(moving_averages)
 plt.show()
+
+a

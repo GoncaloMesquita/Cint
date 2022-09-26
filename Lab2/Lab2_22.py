@@ -112,4 +112,3 @@ print(moving_averages)
 plt.plot(moving_averages)
 plt.show()
 
-a

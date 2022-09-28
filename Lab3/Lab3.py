@@ -4,39 +4,52 @@ import matplotlib.pyplot as plt
 import datetime
 from statistics import stdev
 
-def identify_outliers(data):
+def identify_outliers(data, coll):
 
     #print(data.Low.describe())
-    upper_limit = data.Low.mean() + 3*data['Low'].std()
-    lower_limit = data.Low.mean() - 3*data['Low'].std()
+    upper_limit = data[coll].mean() + 3*data[coll].std()
+    lower_limit = data[coll].mean() - 3*data[coll].std()
 
-    out = data[(data.Low > upper_limit) | (data.Low < lower_limit)] 
+    out = data[coll][(data[coll] > upper_limit) | (data[coll] < lower_limit)] 
     return out
 
-def taking_outliers(data, outlier):
+def taking_outliers(data, outlier, coll):
 
-    data_clean = data['Low'].drop(outlier.index[0], inplace = False)
+    data_clean = data[coll].drop(outlier.index[0], inplace = False)
     data_clean.plot()
+    plt.title(coll)
     plt.show()
+
     return
 
-def define_outlier_previous(data, outlier):
+def define_outlier_previous(data, outlier, coll):
+    
+    data.iloc[outlier.index, data.columns == coll ] = data.iloc[outlier.index - 1, data.columns == coll ]
 
-    data['Low'] = data['Low'].replace(outlier.index[0], data['Low'][outlier.index[0]-1])
-    print(data['Low'][100:110])
+    print(data[coll][100:110])
+    return 
 #EXERCISE 1
 
 df = pd.read_csv('EURUSD_Daily_Ask_2018.12.31_2019.10.05v2.csv', sep = ';', decimal=",")
 
-df.plot()
+df = df.rename(columns={"Volume ": "Volume"})
+df['Time (UTC)'] = pd.to_datetime(df['Time (UTC)'])
+
+plt.plot(df['Time (UTC)'],df['Open'])
+plt.plot(df['Time (UTC)'],df['Low'])
 plt.show()
+plt.plot(df['Time (UTC)'],df['Volume'])
+plt.show() 
 
-Time = pd.to_datetime(df['Time (UTC)'])
+
 startTime = datetime.datetime(2022, 9, 23, 0, 0)
-outliers = identify_outliers(df)
-taking_outliers(df, outliers)
-define_outlier_previous(df, outliers)
-
+j= 0
+for i in df.columns:
+    if j >=1:
+        outliers = identify_outliers(df, i)
+        taking_outliers(df, outliers, i)
+        define_outlier_previous(df, outliers, i)
+    j=j+1
 #EXERCISE 2
 
 df1 = pd.read_csv('DCOILBRENTEUv2.csv')
@@ -54,9 +67,7 @@ plt.show()
 #EXERCICE 3 
 
 df2 = pd.read_csv('DCOILWTICOv2.csv')
-print(df2)
 
-ax = df1['DCOILBRENTEU'].plot()
-
-df2['DCOILWTICO'].plot(ax=ax)
-plt.show()
+plt.plot(df1['DCOILBRENTEU'])
+plt.plot(df2['DCOILWTICO'])
+plt.show() 

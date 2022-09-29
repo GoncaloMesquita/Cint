@@ -1,4 +1,7 @@
-import sklearn
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import LinearSVC
+from sklearn import svm
+from sklearn.neighbors import KNeighborsClassifier
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -15,9 +18,10 @@ iris_dat.columns = ['sepal length','sepal width','petal length','petal width','c
 
 
 
+#Plots
+# sns.set_theme(style="darkgrid")
+# sns.relplot(iris_dat,x='sepal length',y='sepal width',hue='class',style='class', size='petal width')
 
-sns.set_theme(style="darkgrid")
-sns.relplot(iris_dat,x='sepal length',y='sepal width',hue='class',style='class', size='petal width')
+# sns.relplot(hab_dat,x='Age',y='Nodes detected',hue='Survival status',style='Survival status',size='Nodes detected')
+# plt.show()
 
-sns.relplot(hab_dat,x='Age',y='Nodes detected',hue='Survival status',style='Survival status',size='Nodes detected')
-plt.show()

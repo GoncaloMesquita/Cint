@@ -64,3 +64,4 @@ for i in df.columns:
         outliers, missing_values = identify_outliers1(df_clean, i)
         df_clean = replacing_outliers_missvalues(df_clean, outliers, missing_values, i)
         data_visualization(df,df_clean, i)
+

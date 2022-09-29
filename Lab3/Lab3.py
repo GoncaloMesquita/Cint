@@ -58,7 +58,7 @@ df1.DATE = pd.to_datetime(df1.DATE)
 df1.plot(x = 'DATE')
 plt.show()
 
-df1['DCOILBRENTEU'].diff().hist(bins=35)
+df1['DCOILBRENTEU'].diff().hist(bins=100)
 plt.show()
 
 df1['DCOILBRENTEU'].groupby(df1['DATE'].dt.year).count().plot(kind="bar")

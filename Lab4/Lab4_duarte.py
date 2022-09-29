@@ -16,4 +16,4 @@ iris_dat.columns = ['sepal length','sepal width','petal length','petal length','
 
 sns.set_theme(style="darkgrid")
 sns.relplot(iris_dat,x='sepal length',y='sepal width',hue='class',style='class')
-# plt.show()
+plt.show()

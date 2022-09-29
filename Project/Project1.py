@@ -14,7 +14,7 @@ def data_visualization(data, data_clean, coll):
     fig, axs = plt.subplots(2)
     axs[0].plot(data[coll])
     axs[1].plot(data_clean[coll])
-    plt.title(coll)
+    #fig.title(coll)
     plt.show()
 
     return
@@ -38,10 +38,12 @@ def identify_outliers1(data,  coll):
     return out """
 
 def replacing_outliers_missvalues(data, outlier,miss_value, coll):
-    
-    #data.iloc[outlier.index, data.columns == coll ] = (data.iloc[outlier.index - 1, data.columns == coll ] + data.iloc[outlier.index +1, data.columns == coll ])/2
+    #mean = sum(data[coll][outlier.index - 1], data[coll][outlier.index + 1]) /2
+    #mean_miss = sum(data[coll][miss_value.index - 1], data[coll][miss_value.index + 1]) /2
+    #data.iloc[outlier.index, data.columns == coll ] = mean
     data.iloc[outlier.index, data.columns == coll ] = data.iloc[outlier.index - 1, data.columns == coll ] 
-    data.iloc[miss_value.index, data.columns == coll ] = data.iloc[miss_value.index - 1, data.columns == coll ] 
+    data.iloc[miss_value.index, data.columns == coll ] = data.iloc[miss_value.index - 1, data.columns == coll ]
+    #data.iloc[miss_value.index, data.columns == coll ] = mean_miss
     #data.iloc[outlier.index, data.columns == coll ] = np.nan
     #data.interpolate(method = 'linear')
     return data
@@ -55,7 +57,7 @@ df = pd.read_csv('Proj1_Dataset.csv')
 #print(df.describe())
 #print(df.isnull().sum()) 
 
-print(df.describe())
+#print(df.describe())
 df_clean = df.copy()
 
 for i in df.columns:
@@ -65,3 +67,4 @@ for i in df.columns:
         df_clean = replacing_outliers_missvalues(df_clean, outliers, missing_values, i)
         data_visualization(df,df_clean, i)
 
+print(df_clean.describe())

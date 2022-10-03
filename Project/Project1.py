@@ -1,7 +1,15 @@
+from typing import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
 import numpy as np
+from matplotlib import pyplot
+from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+from sklearn.model_selection import cross_validate
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score
 
 
 #---------------------Functions------------------------------
@@ -21,32 +29,36 @@ def data_visualization(data, data_clean, coll):
 
 def identify_outliers1(data,  coll):
 
-    upper_limit = data[coll].mean() + 4*data[coll].std()
-    lower_limit = data[coll].mean() - 4*data[coll].std()
-
-    out = data[coll][(data[coll] > upper_limit) | (data[coll] < lower_limit)] 
+    upper_limit = data[coll].mean() + 6*data[coll].std()
+    lower_limit = data[coll].mean() - 6*data[coll].std()
+    out = data[coll][(data[coll] > upper_limit) | (data[coll] < lower_limit)]
     miss_values = data[data[coll].isnull()]
     return out, miss_values
 
-""" def identify_outliers2(data, coll):
-    q1 = df[coll].quantile(0.25)
-    q3 = df[coll].quantile(0.75)
-    iqr = q3 - q1
-    lower_limit = df[coll].quantile(0.03) -(1.5 * iqr) 
-    upper_limit = df[coll].quantile(.97) +(1.5 * iqr)
-    out = data[coll][(data[coll] > upper_limit) | (data[coll] < lower_limit)] 
-    return out """
-
 def replacing_outliers_missvalues(data, outlier,miss_value, coll):
-    #mean = sum(data[coll][outlier.index - 1], data[coll][outlier.index + 1]) /2
-    #mean_miss = sum(data[coll][miss_value.index - 1], data[coll][miss_value.index + 1]) /2
-    #data.iloc[outlier.index, data.columns == coll ] = mean
     data.iloc[outlier.index, data.columns == coll ] = data.iloc[outlier.index - 1, data.columns == coll ] 
     data.iloc[miss_value.index, data.columns == coll ] = data.iloc[miss_value.index - 1, data.columns == coll ]
     #data.iloc[miss_value.index, data.columns == coll ] = mean_miss
     #data.iloc[outlier.index, data.columns == coll ] = np.nan
     #data.interpolate(method = 'linear')
     return data
+
+def normalize_data(x_data):
+
+    x_norm = preprocessing.normalize(x_data)
+    return x_norm
+
+def split_data(x, y):
+
+    Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,shuffle=True )
+    return Xtrain, Xtest, ytrain, ytest
+
+def balance_data(x, y):
+
+    oversample = SMOTE()
+    X, Y = oversample.fit_resample(x, y)
+    return X, Y
+
 #---------------------MAIN-----------------------------------
 
 df = pd.read_csv('Proj1_Dataset.csv')
@@ -59,12 +71,56 @@ df = pd.read_csv('Proj1_Dataset.csv')
 
 #print(df.describe())
 df_clean = df.copy()
-
-for i in df.columns:
+df_clean.drop(['Date', 'Time'], axis=1, inplace=True)
+for i in df_clean.columns:
     
-    if i != "Time" and i !="Date":  
-        outliers, missing_values = identify_outliers1(df_clean, i)
-        df_clean = replacing_outliers_missvalues(df_clean, outliers, missing_values, i)
-        data_visualization(df,df_clean, i)
+    #if i != "Time" and i !="Date":  
+    outliers, missing_values = identify_outliers1(df_clean, i)
+    df_clean = replacing_outliers_missvalues(df_clean, outliers, missing_values, i)
+        #data_visualization(df,df_clean, i)
 
-print(df_clean.describe())
+df_clean.boxplot(column=['S1Temp', 'S2Temp', 'S3Temp' ])
+plt.show()
+
+#plt.scatter(df_clean['S1Temp'][0:100], df_clean['Time'][0:100], marker='^')
+#plt.scatter(df_clean['S2Temp'][0:100], df_clean['Time'][0:100], marker='o')
+#plt.scatter(df_clean['S3Temp'][0:100], df_clean['Time'][0:100], marker='x')
+#plt.show()
+
+y = df_clean['Persons'].copy()
+x = df_clean.drop(columns=['Persons'], axis= 1 , inplace=False)
+
+#Nomalize data
+
+X_norm = normalize_data(x)
+
+#Slipt the data 
+
+x_train, x_test, y_train, y_test = split_data(X_norm, y)
+
+#Balance the training data
+#counter = Counter(y_data)
+#print(counter)
+#X_train, Y_train = balance_data(x_train, y_train)
+clf = MLPClassifier(  hidden_layer_sizes=(10, ),max_iter = 600, activation='tanh', random_state=1)
+#_scoring = {'accuracy' : make_scorer(accuracy_score), 'precision' : make_scorer(precision_score),'recall' : make_scorer(recall_score), 'f1_score' : make_scorer(f1_score)}
+results = cross_validate(estimator=clf,X=x_train,y=y_train,cv=5, return_train_score=True)
+
+y_pred = clf.predict(x_test)
+
+""" print("Training Accuracy scores:",results['train_accuracy'],
+              "Mean Training Accuracy:" ,results['train_accuracy'].mean()*100,
+              "Training Precision scores:", results['train_precision'],
+              "Mean Training Precision:", results['train_precision'].mean(),
+              "Training Recall scores:", results['train_recall'],
+              "Mean Training Recall:" ,results['train_recall'].mean(),
+              "Training F1 scores:" ,results['train_f1'],
+              "Mean Training F1 Score:", results['train_f1'].mean(),
+              "Validation Accuracy scores:", results['test_accuracy'],
+              "Mean Validation Accuracy:" ,results['test_accuracy'].mean()*100,
+              "Validation Precision scores:", results['test_precision'],
+              "Mean Validation Precision:" ,results['test_precision'].mean(),
+              "Validation Recall scores:" ,results['test_recall'],
+              "Mean Validation Recall:" ,results['test_recall'].mean(),
+              "Validation F1 scores:" ,results['test_f1'],
+              "Mean Validation F1 Score:", results['test_f1'].mean()) """

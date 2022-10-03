@@ -10,7 +10,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import cross_validate
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score
-
+import sklearn.metrics as met
 
 #---------------------Functions------------------------------
 
@@ -102,25 +102,16 @@ x_train, x_test, y_train, y_test = split_data(X_norm, y)
 #counter = Counter(y_data)
 #print(counter)
 #X_train, Y_train = balance_data(x_train, y_train)
-clf = MLPClassifier(  hidden_layer_sizes=(10, ),max_iter = 600, activation='tanh', random_state=1)
+clf = MLPClassifier(  hidden_layer_sizes=(6, ),max_iter = 1000, activation='relu', random_state=1)
 #_scoring = {'accuracy' : make_scorer(accuracy_score), 'precision' : make_scorer(precision_score),'recall' : make_scorer(recall_score), 'f1_score' : make_scorer(f1_score)}
-results = cross_validate(estimator=clf,X=x_train,y=y_train,cv=5, return_train_score=True)
-
-y_pred = clf.predict(x_test)
-
-""" print("Training Accuracy scores:",results['train_accuracy'],
-              "Mean Training Accuracy:" ,results['train_accuracy'].mean()*100,
-              "Training Precision scores:", results['train_precision'],
-              "Mean Training Precision:", results['train_precision'].mean(),
-              "Training Recall scores:", results['train_recall'],
-              "Mean Training Recall:" ,results['train_recall'].mean(),
-              "Training F1 scores:" ,results['train_f1'],
-              "Mean Training F1 Score:", results['train_f1'].mean(),
-              "Validation Accuracy scores:", results['test_accuracy'],
-              "Mean Validation Accuracy:" ,results['test_accuracy'].mean()*100,
-              "Validation Precision scores:", results['test_precision'],
-              "Mean Validation Precision:" ,results['test_precision'].mean(),
-              "Validation Recall scores:" ,results['test_recall'],
-              "Mean Validation Recall:" ,results['test_recall'].mean(),
-              "Validation F1 scores:" ,results['test_f1'],
-              "Mean Validation F1 Score:", results['test_f1'].mean()) """
+results = cross_validate(clf,X=x_train,y=y_train,cv=5, return_train_score=True,scoring='recall_macro'  ,return_estimator=True)
+best = 0
+print(results)
+for i in range ( 0, len(results['train_score'])):
+    if best < results['train_score'][i]:
+        index_best = i 
+        best = results['train_score'][i]
+y_pred = results['estimator'][index_best].predict(x_test)
+print(met.accuracy_score(y_test,y_pred))
+print(met.precision_score(y_test, y_pred,  average=None))
+print(met.recall_score(y_test,y_pred,  average='macro'))

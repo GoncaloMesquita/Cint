@@ -46,9 +46,18 @@ def hyper_param_tunning(x_train, y_train):
         alphas.append(alpha)
         l_rates.append(learn_rate)
 
-    param_grid = {'hidden_layer_sizes':[(3,),(4,),(5,),(6,),(3,3),(4,4),(3,4),(4,5)], 'activation':['identity', 'logistic', 'tanh', 'relu'], 'alpha':alphas, 'learning_rate_init':l_rates}
-    scoring = {'accuracy':met.accuracy_score,'precision':met.precision_score,'recall':met.recall_score}
-    mlp = MLPClassifier(solver='lbfgs')
-    best_params = GridSearchCV(mlp,param_grid,scoring=scoring, cv= 5).best_params_
+    param_grid = {'hidden_layer_sizes':[(3,),(4,),(5,),(6,),(3,3),(4,4)], 'activation':['identity', 'logistic', 'tanh', 'relu'], 'alpha':alphas, 'learning_rate_init':l_rates}
+    scoring = {'accuracy':met.make_scorer(met.accuracy_score)}
+    mlp = MLPClassifier(solver='lbfgs', max_iter=1000)
+    gs_cv = GridSearchCV(mlp,param_grid,scoring=scoring, cv= 5,refit="accuracy")
+    gs_cv.fit(x_train,y_train)
+    best_params = gs_cv.best_params_
+
     return best_params
 
+X_iris_train, X_iris_test =  data_normalizer(X_iris_train, X_iris_test)
+
+print(hyper_param_tunning(X_iris_train, y_iris_train))
+
+
+# {'activation': 'logistic', 'alpha': 0.0022301350200402015, 'hidden_layer_sizes': (3, 3), 'learning_rate_init': 0.0009486450616421977}

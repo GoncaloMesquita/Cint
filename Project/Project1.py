@@ -1,3 +1,5 @@
+#%%
+import re
 from typing import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,8 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.model_selection import cross_validate
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score
 import sklearn.metrics as met
+import seaborn as sns
+import time
 
 #---------------------Functions------------------------------
 
@@ -27,7 +30,7 @@ def data_visualization(data, data_clean, coll):
 
     return
 
-def identify_outliers1(data,  coll):
+def identify_outliers(data,  coll):
 
     upper_limit = data[coll].mean() + 6*data[coll].std()
     lower_limit = data[coll].mean() - 6*data[coll].std()
@@ -43,15 +46,15 @@ def replacing_outliers_missvalues(data, outlier,miss_value, coll):
     #data.interpolate(method = 'linear')
     return data
 
-def normalize_data(x_data):
-
-    x_norm = preprocessing.normalize(x_data)
-    return x_norm
-
 def split_data(x, y):
 
     Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,shuffle=True )
     return Xtrain, Xtest, ytrain, ytest
+
+def normalize_data_test(xtrain, xtest):
+    
+    x_norm = preprocessing.MinMaxScaler (xtest, data_min_=xtrain, data_max_ = xtrain)
+    return x_norm
 
 def balance_data(x, y):
 
@@ -59,6 +62,20 @@ def balance_data(x, y):
     X, Y = oversample.fit_resample(x, y)
     return X, Y
 
+def cross_validation(xtraining, ytraining):
+
+    clf = MLPClassifier( hidden_layer_sizes=(6, ),max_iter = 300, activation='relu', random_state=1, early_stopping=True)
+    results = cross_validate(clf,X=xtraining,y=ytraining,cv=5, return_train_score=True,scoring='recall_macro'  ,return_estimator=True)
+    print('Cross Validation Validation results: ', results['test_score'],'\nCross Validation train results: ', results['train_score'])
+    return results
+
+def prediction(modelos, X_test, Y_test):
+
+    y_pred = modelos['estimator'].predict(X_test)
+    print('Test Accuracy: ' ,met.accuracy_score(Y_test,y_pred))
+    print('Test Precision of each class: ',met.precision_score(Y_test, y_pred,  average=None))
+    print('Test Recall: ', met.recall_score(y_test,y_pred,  average='macro'))
+    print('Confusion Matrix' ,met.confusion_matrix(Y_test,y_pred))
 #---------------------MAIN-----------------------------------
 
 df = pd.read_csv('Proj1_Dataset.csv')
@@ -75,43 +92,53 @@ df_clean.drop(['Date', 'Time'], axis=1, inplace=True)
 for i in df_clean.columns:
     
     #if i != "Time" and i !="Date":  
-    outliers, missing_values = identify_outliers1(df_clean, i)
+    outliers, missing_values = identify_outliers(df_clean, i)
     df_clean = replacing_outliers_missvalues(df_clean, outliers, missing_values, i)
         #data_visualization(df,df_clean, i)
 
-df_clean.boxplot(column=['S1Temp', 'S2Temp', 'S3Temp' ])
-plt.show()
+#df_clean.boxplot(column=['S1Temp', 'S2Temp', 'S3Temp' ])
+#plt.show()
 
 #plt.scatter(df_clean['S1Temp'][0:100], df_clean['Time'][0:100], marker='^')
 #plt.scatter(df_clean['S2Temp'][0:100], df_clean['Time'][0:100], marker='o')
 #plt.scatter(df_clean['S3Temp'][0:100], df_clean['Time'][0:100], marker='x')
 #plt.show()
 
+plt.figure(figsize=(12,10), dpi= 80)
+sns.heatmap(df_clean.corr(), xticklabels=df_clean.corr().columns, yticklabels=df_clean.corr().columns, cmap='RdYlGn', center=0, annot=True)
+
+# Decorations
+plt.title('Correlogram heatmap', fontsize=22)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.show()
+
 y = df_clean['Persons'].copy()
 x = df_clean.drop(columns=['Persons'], axis= 1 , inplace=False)
 
-#Nomalize data
+#SPLIT DATA
 
-X_norm = normalize_data(x)
+x_train, x_test, y_train, y_test = split_data(x, y)
 
-#Slipt the data 
+#NORMALIZE DATA
 
-x_train, x_test, y_train, y_test = split_data(X_norm, y)
+x_norm_train = preprocessing.normalize(x_train)
+x_norm_test = normalize_data_test(x_train, x_test)
 
-#Balance the training data
-#counter = Counter(y_data)
+#BALANCE TRAINING DATA
+
+#counter = Counter(y_train)
 #print(counter)
-#X_train, Y_train = balance_data(x_train, y_train)
-clf = MLPClassifier(  hidden_layer_sizes=(6, ),max_iter = 1000, activation='relu', random_state=1)
-#_scoring = {'accuracy' : make_scorer(accuracy_score), 'precision' : make_scorer(precision_score),'recall' : make_scorer(recall_score), 'f1_score' : make_scorer(f1_score)}
-results = cross_validate(clf,X=x_train,y=y_train,cv=5, return_train_score=True,scoring='recall_macro'  ,return_estimator=True)
-best = 0
-print(results)
-for i in range ( 0, len(results['train_score'])):
-    if best < results['train_score'][i]:
-        index_best = i 
-        best = results['train_score'][i]
-y_pred = results['estimator'][index_best].predict(x_test)
-print(met.accuracy_score(y_test,y_pred))
-print(met.precision_score(y_test, y_pred,  average=None))
-print(met.recall_score(y_test,y_pred,  average='macro'))
+X_train, Y_train = balance_data(x_norm_train, y_train)
+
+#CROSS VALIDATION 
+start_time1 = time.process_time()
+models = cross_validation(X_train, Y_train)
+mod = np.mean(models['test_score'])
+print(mod)
+
+print ("Time of crossvalidation ", time.process_time() - start_time1, "seconds")
+#PREDICTION RESULTS
+
+prediction(models,x_test, y_test)
+

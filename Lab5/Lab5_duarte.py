@@ -20,7 +20,7 @@ iris_dat.columns = ['sepal length','sepal width','petal length','petal width','c
 
 
 # Separate training set from test set
-X_Hab_train, X_Hab_test, y_Hab_train, y_Hab_test = train_test_split(hab_dat.iloc[:,:3].values,hab_dat.iloc[:,3].values, test_size=0.1,random_state=20)
+X_Hab_train, X_Hab_test, y_Hab_train, y_Hab_test = train_test_split(hab_dat.iloc[:,:3].values,hab_dat.iloc[:,3].values, test_size=0.2,random_state=20)
 
 X_iris_train, X_iris_test, y_iris_train, y_iris_test = train_test_split(iris_dat.iloc[:,:4].values,iris_dat.iloc[:,4].values, test_size=0.2,random_state=20)
 
@@ -52,7 +52,8 @@ def hyper_param_tunning(x_train, y_train):
 
     return best_params
 
-
+# x_train , x_test = data_normalizer(X_Hab_train, X_Hab_test)
+# print(hyper_param_tunning(x_train,y_Hab_train))
 
 def scores(x_train, x_test, y_train, y_test,data_set_name):
     x_train, x_test =  data_normalizer(x_train, x_test)
@@ -63,9 +64,9 @@ def scores(x_train, x_test, y_train, y_test,data_set_name):
         hyperparams = {'activation': 'logistic', 'alpha': 0.0022301350200402015, 'hidden_layer_sizes': (3, 3), 'learning_rate_init': 0.0009486450616421977}
         average = 'macro'
     elif data_set_name == 'haberman':
+        hyperparams = {'activation': 'relu', 'alpha': 0.0022301350200402015, 'hidden_layer_sizes': (3,), 'learning_rate_init': 0.0004840025824705091}
         average = 'binary'
-        pass
-        # hyperparams
+        
     mlp = MLPClassifier(activation=hyperparams['activation'],hidden_layer_sizes=hyperparams['hidden_layer_sizes'],alpha=hyperparams['alpha'], learning_rate_init=hyperparams['learning_rate_init'], solver='lbfgs', max_iter=10000)
     mlp.fit(x_train,y_train)
     y_pred = mlp.predict(x_test)
@@ -73,4 +74,5 @@ def scores(x_train, x_test, y_train, y_test,data_set_name):
     score = {'accuracy':met.accuracy_score(y_test, y_pred),'precision':met.precision_score(y_test, y_pred, average=average),'recall':met.recall_score(y_test, y_pred,average=average)}
     return score
 
-print(scores(X_iris_train,X_iris_test, y_iris_train, y_iris_test, 'iris'))
+# print(scores(X_iris_train,X_iris_test, y_iris_train, y_iris_test, 'iris'))
+print(scores(X_Hab_train,X_Hab_test, y_Hab_train, y_Hab_test, 'haberman'))

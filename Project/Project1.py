@@ -75,7 +75,7 @@ def cross_validation(xtraining, ytraining):
     return results
 
 def hyperparameters_tunning(x_training, y_training):
-    parameters={ 'hidden_layer_sizes':[(3,),(6,),(6,2)], 'activation':['identity', 'logistic', 'tanh', 'relu'], 'alpha':[ 0.01, 0.001], 'learning_rate_init':[0.002, 0.001]}
+    parameters={ 'hidden_layer_sizes':[(3,),(6,),(6,2),(10,), (13,) ], 'activation':[ 'logistic',  'relu'], 'alpha':[  0.001, 0.0005], 'learning_rate_init':[0.004, 0.003,0.002, 0.001]}
     scoring = {'accuracy':met.make_scorer(met.accuracy_score)}
     model = MLPClassifier(early_stopping=True)
     gs_cv = GridSearchCV(model,parameters,scoring=scoring, cv= 5,refit="accuracy")

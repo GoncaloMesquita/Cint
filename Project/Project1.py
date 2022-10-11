@@ -13,7 +13,6 @@ from sklearn.neural_network import MLPClassifier
 import sklearn.metrics as met
 import seaborn as sns
 import time
-from sklearn.model_selection import GridSearchCV
 
 #---------------------Functions------------------------------
 
@@ -40,6 +39,7 @@ def identify_outliers(data,  coll):
     upper_limit = data[coll].mean() + 5.4*data[coll].std()
     lower_limit = data[coll].mean() - 5.4*data[coll].std()
     out = data[coll][(data[coll] > upper_limit) | (data[coll] < lower_limit)]
+    print(out)
     miss_values = data[data[coll].isnull()]
     return out, miss_values
 
@@ -93,7 +93,7 @@ def prediction_multiclass(xtrain, ytrain, xtest, ytest):
     y_pred1 = model1.predict(xtest)
     Time['model 1'].append(time.process_time() - start_time1)
     accuracy['model 1'].append(met.accuracy_score(ytest,y_pred1))
-    precision['model 1'].append(met.precision_score(ytest, y_pred1,  average=None))
+    precision['model 1'].append(met.precision_score(ytest, y_pred1,  average='macro'))
     recall['model 1'].append(met.recall_score(ytest,y_pred1,  average='macro'))
 
     start_time2 = time.process_time()
@@ -170,7 +170,7 @@ def prediction_binary(xtrain, ytrain, xtest, ytest):
     accuracy['model 4'].append(met.accuracy_score(ytest,y_pred4))
     precision['model 4'].append(met.precision_score(ytest, y_pred4,  average='macro'))
     recall['model 4'].append(met.recall_score(ytest,y_pred4,  average='macro'))
-    print('\n Binary Classification')
+    print('\nBinary Classification')
     print('accuracy: ', accuracy)
     print('precision: ', precision)
     print('recall: ', recall)

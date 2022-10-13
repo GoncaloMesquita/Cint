@@ -1,16 +1,19 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
+import time
 import numpy as np
 import skfuzzy.control as ctrl
 import skfuzzy as fuzz
 from sklearn.model_selection import train_test_split
+from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.model_selection import cross_validate
 from sklearn.neural_network import MLPClassifier
 import sklearn.metrics as met
 import seaborn as sns
-from datetime import datetime, timedelta
+import math
+
 from sklearn.model_selection import GridSearchCV
 
 #---------------------Functions------------------------------
@@ -80,8 +83,12 @@ df_clean['S1Light'] = (df_clean['S1Light']+df_clean['S2Light']+df_clean['S3Light
 df_clean.rename({'S1Light': 'SLight'}, axis=1, inplace=True)
 df_clean.drop(columns=['S2Light','S3Light'], axis= 1 , inplace=True)
 
-df_clean['CO2_diff'] = np.append(np.diff(df_clean['CO2']),0)
-df_clean.drop(columns=['CO2'], axis= 1 , inplace=True)
+df_clean['CO2'] = np.append(np.diff(df_clean['CO2']),0)
+df_clean.rename({'CO2': 'CO2_diff'}, axis=1, inplace=True)
+# df_clean.drop(columns=['CO2'], axis= 1 , inplace=True)
+
+df_clean.drop(columns=['PIR1'], axis= 1 , inplace=True)
+df_clean.drop(columns=['PIR2'], axis= 1 , inplace=True)
 
 # plt.figure()
 # plt.plot(df_clean['CO2_diff'],label='CO2_diff')
@@ -104,47 +111,118 @@ Xtrain, Xval, ytrain, yval = train_test_split(Xtrain,ytrain, test_size=0.10,shuf
 # plt.xticks(fontsize=12)
 # plt.yticks(fontsize=12)
 # # plt.show()
-print(max(df_clean['CO2_diff']))
-print(max(df_clean['SLight']))
-print(min(df_clean['CO2_diff']))
-print(min(df_clean['SLight']))
+
+# print(max(df_clean['CO2_diff']))
+# print(max(df_clean['SLight']))
+# print(min(df_clean['CO2_diff']))
+# print(min(df_clean['SLight']))
 
 CO2_variation = ctrl.Antecedent(np.arange(-30, 185, 5),'CO2 variation')
 S_light = ctrl.Antecedent(np.arange(0, 468, 1),'Light intensity')
-Time = ctrl.Antecedent(np.arange(0, 5, 1),'Time')
+Time = ctrl.Antecedent(np.arange(0, 86400, 1),'Time')
 
-Persons = ctrl.Consequent(np.arange(0,3.5,0.5),'Number of persons')
+Persons = ctrl.Consequent(np.arange(0,3,0.25),'Number of persons')
 
 # a = np.array(np.arange(0,2880,0.5), dtype='datetime64[s]', datetime.timedelta(seconds=30))
+# print(df_clean['CO2_diff'].quantile(0.90))
+# print(df_clean['SLight'].quantile(0.92))
+# # print(df_clean.index[df_clean['SLight'] == 322])
 
-CO2_variation['drecreasing'] = fuzz.trimf(CO2_variation.universe,[0, 0, 50])
-CO2_variation['constant'] = fuzz.trimf(CO2_variation.universe,[30, 50, 70])
-CO2_variation['increasing'] = fuzz.trimf(CO2_variation.universe,[50, 100, 100])
 
-S_light['low'] = fuzz.trimf(S_light.universe,[0, 0, 1.5])
-S_light['medium'] = fuzz.trimf(S_light.universe,[0.5, 2, 3.5])
-S_light['low'] = fuzz.trimf(S_light.universe,[2.5, 4, 4])
+x = [time.strptime(t,'%H:%M:%S') for t in df_clean['Time']]
+s = np.array([datetime.timedelta(hours=t.tm_hour,minutes=t.tm_min,seconds=t.tm_sec).total_seconds() for t in x])
+for i, value in enumerate(np.array(s<72000)):
+    if value == True:
+        s[i] += 14400
+    else:
+        s[i] -= 72000
+df_clean['Time'] = np.array(s)
 
-Time['night'] = fuzz.trimf(Time.universe,[0, 0, 3500])
-Time['day'] = fuzz.trimf(Time.universe,[2500, 6000, 6000])
+# print(df_clean.iloc[df_clean.index[df_clean['SLight'] == 322]])
+# print(df_clean.loc[(df_clean['SLight'] == 0 )& (df_clean['Persons'] == 3)])
+# print(len(df_clean.iloc[df_clean.index[df_clean['Persons'] == 3]]))
+# print(min(np.array(df_clean.iloc[df_clean.index[df_clean['Persons'] == 3],df_clean.columns == 'SLight'])))
+# print(df_clean.iloc[df_clean.index[df_clean['CO2_diff'] == 5.0]])
+# print(min(df_clean['Time']))
+# print(min(s))
+
+CO2_variation['decreasing'] = fuzz.trimf(CO2_variation.universe,[-30, -30, -5])
+CO2_variation['constant'] = fuzz.trimf(CO2_variation.universe,[-10, 0, 15])
+CO2_variation['increasing'] = fuzz.trimf(CO2_variation.universe,[5, 185, 185])
+
+S_light['low'] = fuzz.trimf(S_light.universe,[0, 0, 150])
+S_light['medium'] = fuzz.trimf(S_light.universe,[120, 215, 310])
+S_light['high'] = fuzz.trimf(S_light.universe,[300, 468, 468])
+
+# S_light['low'] = fuzz.trimf(S_light.universe,[0, 0, 150])
+# S_light['medium'] = fuzz.trimf(S_light.universe,[120, 220, 320])
+# S_light['high'] = fuzz.trimf(S_light.universe,[310, 468, 468])
+
+Time['night'] = fuzz.trimf(Time.universe,[0,0,43200])
+Time['day'] = fuzz.trimf(Time.universe,[39600, 86399, 86399])
 
 Persons['low'] = fuzz.trimf(Persons.universe,[0, 0, 2])
-Persons['high'] = fuzz.trimf(Persons.universe,[1.5, 3, 3])
+Persons['high'] = fuzz.trimf(Persons.universe,[1, 3, 3])
 
-# datetimeindex = pd.date_range('2021-10-20 00:00:00', '2021-10-20 23:59:59', freq='s')           
-# >>> print(datetimeindex.time[-1])
+# Persons['low'] = fuzz.trimf(Persons.universe,[0, 0, 1.25])
+# Persons['high'] = fuzz.trimf(Persons.universe,[1, 3, 3])
+
 
 Persons.view()
-# clock_speed.view()
-# fan_speed.view()
-# plt.show()
+Time.view()
+CO2_variation.view()
+S_light.view()
+plt.show()
 
-# rule1 = ctrl.Rule(core_temp['cold'] & clock_speed['low'], fan_speed['slow'])
-# rule2 = ctrl.Rule(core_temp['cold'] & clock_speed['normal'], fan_speed['slow'])
-# rule3 = ctrl.Rule(core_temp['cold'] & clock_speed['turbo'], fan_speed['fast'])
-# rule4 = ctrl.Rule(core_temp['warm'] & clock_speed['low'], fan_speed['slow'])
-# rule5 = ctrl.Rule(core_temp['warm'] & clock_speed['normal'], fan_speed['slow'])
-# rule6 = ctrl.Rule(core_temp['warm'] & clock_speed['turbo'], fan_speed['fast'])
-# rule7 = ctrl.Rule(core_temp['hot'] & clock_speed['low'], fan_speed['fast'])
-# rule8 = ctrl.Rule(core_temp['hot'] & clock_speed['normal'], fan_speed['fast'])
-# rule9 = ctrl.Rule(core_temp['hot'] & clock_speed['turbo'], fan_speed['fast'])
+rule1 = ctrl.Rule(Time['night'] & S_light['low'], Persons['low'])
+rule2 = ctrl.Rule(Time['night'] & S_light['medium'], Persons['low'])
+rule3 = ctrl.Rule(Time['night'] & S_light['high'], Persons['low'])
+rule4 = ctrl.Rule(Time['night'] & CO2_variation['decreasing'], Persons['low'])
+rule5 = ctrl.Rule(Time['night'] & CO2_variation['constant'], Persons['low'])
+rule6 = ctrl.Rule(Time['night'] & CO2_variation['increasing'], Persons['low'])
+rule7 = ctrl.Rule(Time['day'] & CO2_variation['decreasing'], Persons['low'])
+# rule8 = ctrl.Rule(Time['day'] & CO2_variation['constant'], Persons['high']) ## n é possivel concluir
+rule9 = ctrl.Rule(Time['day'] & CO2_variation['increasing'], Persons['high'])
+rule10 = ctrl.Rule(Time['day'] & S_light['low'], Persons['low'])
+rule11 = ctrl.Rule(Time['day'] & S_light['medium'], Persons['high'])
+rule12 = ctrl.Rule(Time['day'] & S_light['high'], Persons['high'])
+rule13 = ctrl.Rule(CO2_variation['increasing'] & S_light['low'], Persons['high']) 
+rule14 = ctrl.Rule(CO2_variation['increasing'] & S_light['medium'], Persons['high'])
+rule15 = ctrl.Rule(CO2_variation['increasing'] & S_light['high'], Persons['high'])
+rule16 = ctrl.Rule(CO2_variation['constant'] & S_light['low'], Persons['low'])
+rule17 = ctrl.Rule(CO2_variation['constant'] & S_light['medium'], Persons['low']) # right
+rule18 = ctrl.Rule(CO2_variation['constant'] & S_light['high'], Persons['high']) 
+rule19 = ctrl.Rule(CO2_variation['decreasing'] & S_light['low'], Persons['low'])
+rule20 = ctrl.Rule(CO2_variation['decreasing'] & S_light['medium'], Persons['low'])
+rule21 = ctrl.Rule(CO2_variation['decreasing'] & S_light['high'], Persons['high']) #
+
+
+
+# n_people_ctrl = ctrl.ControlSystem([rule1,rule2,rule3,rule4,rule5,rule6,rule7,rule9,rule10,rule11,rule12,rule13,rule14,rule15,rule16,rule17,rule18,rule19,rule20,rule21])
+n_people_ctrl = ctrl.ControlSystem([rule1,rule2,rule3,rule4,rule5,rule6,rule7,rule9,rule10,rule11,rule12,rule13,rule14,rule15,rule16,rule17,rule18,rule19,rule20,rule21])
+
+# n_people_ctrl = ctrl.ControlSystem([rule1,rule2,rule3,rule4,rule5,rule6,rule7,rule8,rule9,rule10,rule11,rule12,rule13,rule14,rule15,rule16,rule17,rule18,rule19,rule20,rule21])
+
+number_of_people = ctrl.ControlSystemSimulation(n_people_ctrl)
+
+
+
+# predicted_outputs = np.array([])
+# for i in range(len(df_clean['Time'])):
+#     number_of_people.input['CO2 variation'] = df_clean['CO2_diff'][i] 
+#     number_of_people.input['Light intensity'] = df_clean['SLight'][i]
+#     number_of_people.input['Time'] = df_clean['Time'][i]
+#     number_of_people.compute()
+#     predicted_outputs = np.append(predicted_outputs, math.ceil(number_of_people.output['Number of persons']))
+#     # predicted_outputs = np.append(predicted_outputs, math.floor(number_of_people.output['Number of persons']))
+
+# y_true = np.array(df_clean['Persons']>2)
+# y_predicted =  np.array(predicted_outputs>2)
+
+# print('number of right classified samples: ',metrics.accuracy_score(y_true,y_predicted, normalize = False))
+# print('accuracy: ',metrics.accuracy_score(y_true,y_predicted))
+# print('precision: ',metrics.precision_score(y_true,y_predicted))
+# print('recall: ',metrics.recall_score(y_true,y_predicted))
+# print('f1: ',metrics.f1_score(y_true,y_predicted))
+# print('confusion matrix: \n',metrics.confusion_matrix(y_true,y_predicted))
+

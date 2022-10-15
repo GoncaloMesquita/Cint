@@ -1,3 +1,4 @@
+from random import shuffle
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
@@ -99,10 +100,9 @@ y = df_clean['Persons'].copy()
 x = df_clean.drop(columns=['Persons'], axis= 1 , inplace=False)
 
 
-# Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,random_state=20 )
+# Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,random_state=20)
 Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,shuffle=True )
 
-# print(Xtrain)
 
 
 
@@ -209,14 +209,13 @@ rule21 = ctrl.Rule(CO2_variation['decreasing'] & S_light['high'], Persons['high'
 # n_people_ctrl = ctrl.ControlSystem([rule1,rule2,rule3,rule4,rule5,rule6,rule7,rule8,rule9,rule10,rule11,rule12,rule13,rule14,rule15,rule16,rule17,rule18,rule19,rule20,rule21])
 n_people_ctrl = ctrl.ControlSystem([rule1,rule2,rule3,rule4,rule5,rule6,rule10,rule11,rule12,rule13,rule14,rule15,rule16,rule17,rule18,rule19,rule20,rule21])
 
-# n_people_ctrl = ctrl.ControlSystem([rule1,rule2,rule3,rule4,rule5,rule6,rule7,rule8,rule9,rule10,rule11,rule12,rule13,rule14,rule15,rule16,rule17,rule18,rule19,rule20,rule21])
 
 number_of_people = ctrl.ControlSystemSimulation(n_people_ctrl)
 
 
 # print(ytrain)
 
-def testing(X,Y,simulation):
+def Fuzzy_classifier(X,Y,simulation):
     predicted_outputs = np.array([])
     predicted_outputs1 = np.array([])
 
@@ -239,14 +238,14 @@ def testing(X,Y,simulation):
     y_true = np.array(Y>2)
     y_predicted =  np.array(predicted_outputs>2)
     mask = np.array(y_predicted != y_true)
-    print('number of right classified samples: ',metrics.accuracy_score(y_true,y_predicted, normalize = False))
-    print('accuracy: ',metrics.accuracy_score(y_true,y_predicted))
-    print('precision: ',metrics.precision_score(y_true,y_predicted))
-    print('recall: ',metrics.recall_score(y_true,y_predicted))
-    print('f1: ',metrics.f1_score(y_true,y_predicted))
-    print('confusion matrix: \n',metrics.confusion_matrix(y_true,y_predicted))
-    df = pd.concat([X, Y, predicted_outputs1], axis = 1)
-    df = df[mask]
+    print('Fuzzy number of right classified samples: ',metrics.accuracy_score(y_true,y_predicted, normalize = False))
+    print('Fuzzy accuracy: ',metrics.accuracy_score(y_true,y_predicted))
+    print('Fuzzy precision: ',metrics.precision_score(y_true,y_predicted))
+    print('Fuzzy recall: ',metrics.recall_score(y_true,y_predicted))
+    print('Fuzzy f1: ',metrics.f1_score(y_true,y_predicted))
+    print('Fuzzy confusion matrix: \n',metrics.confusion_matrix(y_true,y_predicted))
+    # df = pd.concat([X, Y, predicted_outputs1], axis = 1)
+    # df = df[mask]
     # print((df.loc[df['Persons'] == 3]))
     # print((df.loc[df['Persons'] == 2]))
     # print((df.loc[(df['Persons'] == 3) & (df['SLight'] == 300.000000)]))
@@ -259,6 +258,38 @@ def testing(X,Y,simulation):
 
     
 
-testing(Xtrain, ytrain, number_of_people)
+# Fuzzy_classifier(Xtrain, ytrain, number_of_people)
 
-testing(Xtest, ytest, number_of_people)
+Fuzzy_classifier(Xtest, ytest, number_of_people)
+
+
+def hyperparameters_tunning(x_training, y_training):
+
+
+    parameters={ 'hidden_layer_sizes':[(6,),(8,), (7,), (5,)],  'alpha':[0.001, 0.002, 0.003, 0.004], 'learning_rate_init':[ 0.003,0.002, 0.001]}
+    scoring = {'recall': met.make_scorer(met.recall_score), 'precision': met.make_scorer(met.precision_score)}
+    # gs_cv = GridSearchCV(MLPClassifier(), parameters, scoring=scoring, cv= 5,refit="recall")
+    gs_cv = GridSearchCV(MLPClassifier(), parameters, scoring=scoring, cv= 5,refit="precision")
+    gs_cv.fit(x_training,y_training)
+    return gs_cv.best_params_
+
+def NN_classifier(Xtrain, Xtest, ytrain, ytest):
+    ytrain = np.array(ytrain>2)
+    ytest = np.array(ytest>2)
+    # ytest = ytrain
+
+    # print(hyperparameters_tunning(Xtrain, ytrain))
+
+    model = MLPClassifier(alpha=0.002, hidden_layer_sizes=(5,), learning_rate_init=0.003)
+    model.fit(Xtrain, ytrain)
+    y_predicted = model.predict(Xtest)
+    # y_predicted = model.predict(Xtrain)
+
+    print('MLP number of right classified samples: ',metrics.accuracy_score(ytest,y_predicted, normalize = False))
+    print('MLP accuracy: ',metrics.accuracy_score(ytest,y_predicted))
+    print('MLP precision: ',metrics.precision_score(ytest,y_predicted))
+    print('MLP recall: ',metrics.recall_score(ytest,y_predicted))
+    print('MLP f1: ',metrics.f1_score(ytest,y_predicted))
+    print('MLP confusion matrix: \n',metrics.confusion_matrix(ytest,y_predicted))
+
+NN_classifier(Xtrain, Xtest, ytrain, ytest)

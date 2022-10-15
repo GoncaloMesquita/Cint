@@ -77,7 +77,6 @@ def NN_classifier(Xtrain, Xtest, ytrain, ytest):
     print('MLP confusion matrix: \n',metrics.confusion_matrix(ytest,y_predicted))
 
 ################################################  MAIN  ################################################
-
 df = pd.read_csv('Proj1_Dataset.csv')
 
 ############### Outliers, Missing Data and Feature Selection and Transformation ###############

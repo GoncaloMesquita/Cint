@@ -122,12 +122,13 @@ Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,shuffle=True
 
 ############### Fuzzy variables ###############
 # Inputs:
-CO2_variation = ctrl.Antecedent(np.arange(-30, 185, 2.5),'CO2 variation')
-S_light = ctrl.Antecedent(np.arange(0, 468, 1),'Light intensity')
-Time = ctrl.Antecedent(np.arange(0, 86400, 1),'Time')
+CO2_variation = ctrl.Antecedent(np.arange(-30, 185+5, 5),'CO2 variation')
+S_light = ctrl.Antecedent(np.arange(0, 468+1, 1),'Light intensity')
+Time = ctrl.Antecedent(np.arange(0, 86400+1, 1),'Time')
 
 # Output:
-Persons = ctrl.Consequent(np.arange(0,3,0.25),'Number of persons')
+Persons = ctrl.Consequent(np.arange(0,3+1,1),'Number of persons')
+
 
 # print(Persons.defuzzify_method) # Method used in defuzzification
 
@@ -138,11 +139,11 @@ CO2_variation['constant'] = fuzz.trimf(CO2_variation.universe,[-15, 0, 15])
 CO2_variation['increasing'] = fuzz.trapmf(CO2_variation.universe,[5, 15, 185, 185])
 
 S_light['low'] = fuzz.trimf(S_light.universe,[0, 0, 150])
-S_light['medium'] = fuzz.trimf(S_light.universe,[120, 215, 300])
+S_light['medium'] = fuzz.trimf(S_light.universe,[120, 215, 340])
 S_light['high'] = fuzz.trimf(S_light.universe,[290, 468, 468])
 
 Time['night'] = fuzz.trapmf(Time.universe,[0,43200*0.25,43200*0.75,43200])
-Time['day'] = fuzz.trapmf(Time.universe,[39600, 39600*1.2, 86399*0.85,86399])
+Time['day'] = fuzz.trapmf(Time.universe,[39600, 39600*1.2, 86400*0.85,86400])
 
 Persons['low'] = fuzz.trimf(Persons.universe,[0, 0, 2])
 Persons['high'] = fuzz.trimf(Persons.universe,[1, 3, 3])

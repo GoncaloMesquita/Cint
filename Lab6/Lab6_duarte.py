@@ -3,9 +3,11 @@ import skfuzzy.control as ctrl
 import skfuzzy as fuzz
 import matplotlib.pyplot as plt
 
-core_temp = ctrl.Antecedent(np.arange(0, 101, 1),'core temperature')
-clock_speed = ctrl.Antecedent(np.arange(0, 5, 1),'clock speed frequency')
+core_temp = ctrl.Antecedent(np.arange(0, 101, 0.5),'core temperature')
+clock_speed = ctrl.Antecedent(np.arange(0, 4.5, 0.5),'clock speed frequency')
 fan_speed = ctrl.Consequent(np.arange(0,6001,1),'fan speed')
+
+
 
 core_temp['cold'] = fuzz.trimf(core_temp.universe,[0, 0, 50])
 core_temp['warm'] = fuzz.trimf(core_temp.universe,[30, 50, 70])
@@ -18,10 +20,11 @@ clock_speed['turbo'] = fuzz.trimf(clock_speed.universe,[2.5, 4, 4])
 fan_speed['slow'] = fuzz.trimf(fan_speed.universe,[0, 0, 3500])
 fan_speed['fast'] = fuzz.trimf(fan_speed.universe,[2500, 6000, 6000])
 
-# core_temp.view()
-# clock_speed.view()
-# fan_speed.view()
-# plt.show()
+
+core_temp.view()
+clock_speed.view()
+fan_speed.view()
+plt.show()
 
 rule1 = ctrl.Rule(core_temp['cold'] & clock_speed['low'], fan_speed['slow'])
 rule2 = ctrl.Rule(core_temp['cold'] & clock_speed['normal'], fan_speed['slow'])

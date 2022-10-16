@@ -59,19 +59,15 @@ def predict_binary(X, Y, model):
 
     y_binary = np.where(Y > 2, 1,0)
     y_pred = model.predict(X)
-    precision_macro = (met.precision_score(y_binary, y_pred,  average='macro'))
-    recall_macro = (met.recall_score(y_binary, y_pred,  average='macro'))
-    precision = (met.precision_score(y_binary, y_pred,  average=None))
-    recall = met.recall_score(y_binary,y_pred,  average=None)
+    precision = (met.precision_score(y_binary, y_pred))
+    recall = met.recall_score(y_binary,y_pred)
     C_matrix = met.confusion_matrix(y_binary,y_pred)
-    f1_score_macro = met.f1_score(y_binary,y_pred, average='macro')
-    print('\nMulti Binary')
+    f1_score = met.f1_score(y_binary,y_pred)
+    print('\nBinary Classification')
     print('Confusion Matrix: \n', C_matrix)
     print('Precision: ', precision)
-    print('Recall: ', recall)
-    print('Precision macro: ', precision_macro)
-    print('Recall macro: ', recall_macro)
-    print('F1 macro: ', f1_score_macro)
+    print('Recall: ', recall)    
+    print('F1: ', f1_score)
 
     return
 

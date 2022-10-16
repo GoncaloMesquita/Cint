@@ -100,7 +100,7 @@ y = df_clean['Persons'].copy()
 x = df_clean.drop(columns=['Persons'], axis= 1 , inplace=False)
 
 
-Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,random_state=20)
+Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,random_state=25)
 # Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.10,shuffle=True )
 
 
@@ -314,7 +314,7 @@ def Fuzzy_classifier(X,Y,simulation):
 
 Fuzzy_classifier(Xtrain, ytrain, number_of_people)
 
-# Fuzzy_classifier(Xtest, ytest, number_of_people)
+Fuzzy_classifier(Xtest, ytest, number_of_people)
 
 
 def hyperparameters_tunning(x_training, y_training):

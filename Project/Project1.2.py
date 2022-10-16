@@ -12,6 +12,7 @@ import sklearn.metrics as met
 import math
 from sklearn.model_selection import GridSearchCV
 
+import seaborn as sns
 ################################################  FUNCTIONS  ################################################
 
 def identify_outliers(data,  coll):
@@ -177,7 +178,7 @@ rule16 = ctrl.Rule(CO2_variation['constant'] & S_light['low'], Persons['low'])
 rule17 = ctrl.Rule(CO2_variation['constant'] & S_light['medium'], Persons['low']) 
 rule18 = ctrl.Rule(CO2_variation['constant'] & S_light['high'], Persons['high']) 
 rule19 = ctrl.Rule(CO2_variation['decreasing'] & S_light['low'], Persons['low'])
-rule20 = ctrl.Rule(CO2_variation['decreasing'] & S_light['medium'], Persons['high'])
+rule20 = ctrl.Rule(CO2_variation['decreasing'] & S_light['medium'], Persons['low'])
 rule21 = ctrl.Rule(CO2_variation['decreasing'] & S_light['high'], Persons['high']) 
 
 ############### Control system and simulation ###############
@@ -201,3 +202,4 @@ Fuzzy_classifier(Xtest, ytest, number_of_people) # Results with holdout set
 ############### NN Classifier ###############
 
 NN_classifier(Xtrain, Xtest, ytrain, ytest)
+

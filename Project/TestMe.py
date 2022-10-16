@@ -5,7 +5,8 @@ import sys
 from sklearn import preprocessing
 import time
 import sklearn.metrics as met
-from sklearn.neural_network import MLPClassifier
+
+import numpy as np
 
 ##################################### Functions #######################
 
@@ -35,17 +36,45 @@ def normalize_data(X):
 
     return X_data
 
-def predict(X, Y, model):
+def predict_multi(X, Y, model):
 
-    start_time1 = time.process_time()
     y_pred = model.predict(X)
-    Time = time.process_time() - start_time1)
-    accuracy = append(met.accuracy_score(Y,y_pred))
-    precision['model 1'].append(met.precision_score(Y, y_pred,  average=None))
-    recall['model 1'].append(met.recall_score(Y,y_pred,  average=None))
-    C_matrix['model 1'].append(met.confusion_matrix(Y,y_pred))
+    precision_macro = (met.precision_score(Y, y_pred,  average='macro'))
+    recall_macro = (met.recall_score(Y, y_pred,  average='macro'))
+    precision = (met.precision_score(Y, y_pred,  average=None))
+    recall = met.recall_score(Y,y_pred,  average=None)
+    C_matrix = met.confusion_matrix(Y,y_pred)
+    f1_score_macro = met.f1_score(Y,y_pred, average='macro')
+    print('\nMulti Classification')
+    print('Confusion Matrix:\n ', C_matrix)
+    print('Precision: ', precision)
+    print('Recall: ', recall)
+    print('Precision macro: ', precision_macro)
+    print('Recall macro: ', recall_macro)
+    print('F1 macro: ', f1_score_macro)
 
     return
+
+def predict_binary(X, Y, model):
+
+    y_binary = np.where(Y > 2, 1,0)
+    y_pred = model.predict(X)
+    precision_macro = (met.precision_score(y_binary, y_pred,  average='macro'))
+    recall_macro = (met.recall_score(y_binary, y_pred,  average='macro'))
+    precision = (met.precision_score(y_binary, y_pred,  average=None))
+    recall = met.recall_score(y_binary,y_pred,  average=None)
+    C_matrix = met.confusion_matrix(y_binary,y_pred)
+    f1_score_macro = met.f1_score(y_binary,y_pred, average='macro')
+    print('\nMulti Binary')
+    print('Confusion Matrix: \n', C_matrix)
+    print('Precision: ', precision)
+    print('Recall: ', recall)
+    print('Precision macro: ', precision_macro)
+    print('Recall macro: ', recall_macro)
+    print('F1 macro: ', f1_score_macro)
+
+    return
+
 ##################################### MAIN ############################
 
 if len(sys.argv) < 2:
@@ -78,4 +107,9 @@ x = df_clean.drop(columns=['Persons'], axis= 1 , inplace=False)
 
 #######################################  NORMALIZE DATA   #####################################
 
-x_norm_test, x_norm_train = normalize_data(x)
+x_norm = normalize_data(x)
+
+#######################################  PREDICT RESULTS  ######################################
+
+predict_multi(x_norm, y,model_multi)
+predict_binary(x_norm, y, model_binary)

@@ -33,7 +33,7 @@ def replacing_outliers_missvalues(data, outlier,miss_value, coll):
 
 def split_data(x, y):
 
-    Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.15,random_state=1)
+    Xtrain, Xtest, ytrain, ytest = train_test_split(x,y, test_size=0.15,random_state=2)
 
     return Xtrain, Xtest, ytrain, ytest
 
@@ -76,7 +76,7 @@ def hyperparameters_tunning(x_training, y_training, unbalanced, bin):
     
     return
     
-def prediction_multiclass(xtrain, ytrain, xtest, ytest, unbalanced):
+def prediction_multiclass(xtrain, ytrain, unbalanced):
 
     if unbalanced == 1:
         xtrain, ytrain = balance_data(xtrain, ytrain)
@@ -86,67 +86,14 @@ def prediction_multiclass(xtrain, ytrain, xtest, ytest, unbalanced):
 
     return model3
 
-def prediction_binary(xtrain, ytrain, xtest, ytest, unbalanced):
+def prediction_binary(xtrain, ytrain,unbalanced):
     
     if unbalanced == 1:
         xtrain, ytrain = balance_data(xtrain, ytrain)
-
-    ytrain = np.where(ytrain>2, 1, 0 )
-    ytest = np.where(ytest>2, 1, 0 )
-    accuracy = {'model 1':[],'model 2':[],'model 3':[],'model 4':[]}
-    precision = {'model 1':[],'model 2':[],'model 3':[],'model 4':[]}
-    recall = {'model 1':[],'model 2':[],'model 3':[],'model 4':[]}
-    Time = {'model 1':[],'model 2':[],'model 3':[],'model 4':[]}
-    C_matrix = {'model 1':[],'model 2':[],'model 3':[],'model 4':[]}
-    
-    start_time1 = time.process_time()
-    model1 = MLPClassifier(alpha=0.0005, hidden_layer_sizes=(6,2), learning_rate_init=0.001)
-    model1.fit(xtrain, ytrain)
-    y_pred1 = model1.predict(xtest)
-    Time['model 1'].append(time.process_time() - start_time1)
-    accuracy['model 1'].append(met.accuracy_score(ytest,y_pred1))
-    precision['model 1'].append(met.precision_score(ytest, y_pred1,  average=None))
-    recall['model 1'].append(met.recall_score(ytest,y_pred1,  average=None))
-    C_matrix['model 1'].append(met.confusion_matrix(ytest,y_pred1))
-
-    start_time2 = time.process_time()
-    model2 = MLPClassifier(alpha=0.0005, hidden_layer_sizes=(10,), learning_rate_init=0.003)
-    model2.fit(xtrain, ytrain)
-    y_pred2 = model2.predict(xtest)
-    Time['model 2'].append(time.process_time() - start_time2)
-    accuracy['model 2'].append(met.accuracy_score(ytest,y_pred2))
-    precision['model 2'].append(met.precision_score(ytest, y_pred2,  average=None))
-    recall['model 2'].append(met.recall_score(ytest,y_pred2,  average=None))
-    C_matrix['model 2'].append(met.confusion_matrix(ytest,y_pred2))
-
-    start_time3 = time.process_time()
-    model3 = MLPClassifier(alpha=0.001, hidden_layer_sizes=(6,), learning_rate_init=0.002)
-    model3.fit(xtrain, ytrain)
-    y_pred3 = model3.predict(xtest)
-    Time['model 3'].append(time.process_time() - start_time3)
-    accuracy['model 3'].append(met.accuracy_score(ytest,y_pred3))
-    precision['model 3'].append(met.precision_score(ytest, y_pred3,  average=None))
-    recall['model 3'].append(met.recall_score(ytest,y_pred3,  average=None))
-    C_matrix['model 3'].append(met.confusion_matrix(ytest,y_pred3))
-
-    start_time4 = time.process_time()
+    y_train_binary = np.where(ytrain > 2, 1,0)
     model4 = MLPClassifier(alpha=0.0005, hidden_layer_sizes=(14,), learning_rate_init=0.003)
-    model4.fit(xtrain, ytrain)
-    y_pred4 = model4.predict(xtest)
-    Time['model 4'].append(time.process_time() - start_time4)
-    accuracy['model 4'].append(met.accuracy_score(ytest,y_pred4))
-    precision['model 4'].append(met.precision_score(ytest, y_pred4,  average=None))
-    recall['model 4'].append(met.recall_score(ytest,y_pred4,  average=None))
-    C_matrix['model 4'].append(met.confusion_matrix(ytest,y_pred4))
-
-    print('\nBinary Classification')
-    print('accuracy: ', accuracy)
-    print('precision: ', precision)
-    print('recall: ', recall)
-    print('Confusion Matrix:', C_matrix)
-    print('Time: ', Time)
-
-    return model3
+    model4.fit(xtrain, y_train_binary)
+    return model4
 
 ######################################  MAIN   #################################################
 
@@ -181,9 +128,9 @@ x_norm_test, x_norm_train = normalize_data(x_train, x_test)
 
 #######################################  PREDICTION RESULTS  ######################################
 
-#model_multi= prediction_multiclass(x_norm_train, y_train, x_norm_test, y_test, 0)
-model_binary = prediction_binary(x_norm_train, y_train, x_norm_test, y_test, 0)
+model_multi= prediction_multiclass(x_norm_train, y_train, 0)
+model_binary = prediction_binary(x_norm_train, y_train, 0)
 
 from joblib import dump, load
-#dump(model_multi, 'Model_Multi_class.joblib')
-#dump(model_binary, 'Model_Binary.joblib')
+dump(model_multi, 'Model_Multi_class.joblib')
+dump(model_binary, 'Model_Binary.joblib')

@@ -51,7 +51,7 @@ def Fuzzy_classifier(X,Y,simulation):
     print('Fuzzy recall: ',metrics.recall_score(y_true,y_predicted))
     print('Fuzzy f1: ',metrics.f1_score(y_true,y_predicted))
     print('Fuzzy confusion matrix: \n',metrics.confusion_matrix(y_true,y_predicted))
-
+    
 def hyperparameters_tunning(x_training, y_training):
     y_training = np.array(y_training>2)
 

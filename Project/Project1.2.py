@@ -11,8 +11,8 @@ from sklearn.neural_network import MLPClassifier
 import sklearn.metrics as met
 import math
 from sklearn.model_selection import GridSearchCV
+from sklearn import preprocessing
 
-import seaborn as sns
 ################################################  FUNCTIONS  ################################################
 
 def identify_outliers(data,  coll):
@@ -51,6 +51,15 @@ def Fuzzy_classifier(X,Y,simulation):
     print('Fuzzy recall: ',metrics.recall_score(y_true,y_predicted))
     print('Fuzzy f1: ',metrics.f1_score(y_true,y_predicted))
     print('Fuzzy confusion matrix: \n',metrics.confusion_matrix(y_true,y_predicted))
+
+def normalize_data(xtrain, xtest):
+    
+    scaler = preprocessing.StandardScaler()
+    scaler.fit(xtrain)
+    x_n_train = scaler.transform(xtrain)
+    x_n_test = scaler.transform(xtest)
+
+    return x_n_train, x_n_test 
     
 def hyperparameters_tunning(x_training, y_training):
     y_training = np.array(y_training>2)
@@ -66,7 +75,7 @@ def NN_classifier(Xtrain, Xtest, ytrain, ytest):
     ytrain = np.array(ytrain>2)
     ytest = np.array(ytest>2)
 
-    model = MLPClassifier(alpha=0.002, hidden_layer_sizes=(5,), learning_rate_init=0.003)
+    model = MLPClassifier(alpha=0.001, hidden_layer_sizes=(7,), learning_rate_init=0.001)
     model.fit(Xtrain, ytrain)
     y_predicted = model.predict(Xtest)
 
@@ -195,11 +204,14 @@ number_of_people = ctrl.ControlSystemSimulation(n_people_ctrl)
 
 Fuzzy_classifier(Xtest, ytest, number_of_people) # Results with holdout set
 
-############### Hyperparameters tunning ###############
+############### Data normalization for NN ###############
+
+Xtrain, Xtest = normalize_data(Xtrain, Xtest)
+
+############### Hyperparameters tunning for NN ###############
 
 # print(hyperparameters_tunning(Xtrain, ytrain)) # Hyperparameters used in NN classifier
 
 ############### NN Classifier ###############
 
 NN_classifier(Xtrain, Xtest, ytrain, ytest)
-

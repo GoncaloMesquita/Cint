@@ -35,10 +35,8 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 def eval (individual):
     Z1= math.sqrt((individual[0])**2 + individual[1]**2)
     Z2= math.sqrt((individual[0]-1)**2 + (individual[1]+1)**2)
-    try:
-        return (math.sin(4*Z1)/Z1) + (math.sin(2.5*Z2)/Z2),
-    except ZeroDivisionError:
-        return random.uniform(0.001, 0.009),
+    
+    return (math.sin(4*Z1)/Z1) + (math.sin(2.5*Z2)/Z2),
 
 #----------
 # Operator registration
@@ -51,7 +49,7 @@ toolbox.register("mate", tools.cxOnePoint)
 
 # register a mutation operator with a probability to
 # flip each attribute/gene of 0.05
-toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)
 
 # operator for selecting individuals for breeding the next
 # generation: each individual of the current generation
@@ -62,7 +60,7 @@ toolbox.register("select", tools.selTournament, tournsize=3)
 #----------
 
 def main():
-    #random.seed(64)
+    random.seed(64)
     n=300
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
@@ -72,7 +70,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.5, 0.2
+    CXPB, MUTPB = 0.3, 0.1
     
     print("Start of evolution")
     
@@ -90,7 +88,7 @@ def main():
     g = 0
     
     # Begin the evolution
-    while max(fits) < 11 and g < 100:
+    while max(fits) < 0.3 and g < 200:
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
@@ -143,12 +141,8 @@ def main():
         print("  Max %s" % max(fits))
         print("  Avg %s" % mean)
         print("  Std %s" % std)
-        fit = np.array(fits)
-        best_10 = fit.argsort()
-        l = len(best_10)
-        print(best_10[l-1])
-        print(fit[best_10[l-1]])
-        print(pop[best_10[l-1]])
+        #fit = np.array(fits)
+        #best_10 = fit.argsort()
     print("-- End of (successful) evolution --")
     
     best_ind = tools.selBest(pop, 1)[0]

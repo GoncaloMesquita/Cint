@@ -20,9 +20,9 @@ toolbox = base.Toolbox()
 #                      which corresponds to integers sampled uniformly
 #                      from the range [0,1] (i.e. 0 or 1 with equal
 #                      probability)
-toolbox.register("attr_bool", random.randint, 1, 1000)
+toolbox.register("attr_bool", random.uniform, 0, 1)
 
-# Structure initializers
+# Structure initializers    
 #                         define 'individual' to be an individual
 #                         consisting of 100 'attr_bool' elements ('genes')
 toolbox.register("individual", tools.initRepeat, creator.Individual, 
@@ -35,7 +35,6 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 def eval (individual):
     Z1= math.sqrt((individual[0])**2 + individual[1]**2)
     Z2= math.sqrt((individual[0]-1)**2 + (individual[1]+1)**2)
-    
     return (math.sin(4*Z1)/Z1) + (math.sin(2.5*Z2)/Z2),
 
 #----------
@@ -49,7 +48,7 @@ toolbox.register("mate", tools.cxOnePoint)
 
 # register a mutation operator with a probability to
 # flip each attribute/gene of 0.05
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)   
 
 # operator for selecting individuals for breeding the next
 # generation: each individual of the current generation
@@ -70,7 +69,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.3, 0.1
+    CXPB, MUTPB = 0.5, 0.2
     
     print("Start of evolution")
     
@@ -88,7 +87,7 @@ def main():
     g = 0
     
     # Begin the evolution
-    while max(fits) < 0.3 and g < 200:
+    while max(fits) < 10 and g < 200:
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
@@ -143,10 +142,10 @@ def main():
         print("  Std %s" % std)
         #fit = np.array(fits)
         #best_10 = fit.argsort()
-    print("-- End of (successful) evolution --")
+        print("-- End of (successful) evolution --")
     
-    best_ind = tools.selBest(pop, 1)[0]
-    print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
+        best_ind = tools.selBest(pop, 1)[0]
+        print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
     
 
 if __name__ == "__main__":

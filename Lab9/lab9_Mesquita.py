@@ -73,7 +73,7 @@ def main():
         print("  Std %s" % std)
         """ fits = np.array(fits)
         best_10 = fits.argsort()
-        print(best_10[0:10])
-        print(fits[best_10[0:10]]) """
+        print(best_10[n-1:n-11])
+        print(fits[best_10[n-1:n-11]]) """
     return
 main()

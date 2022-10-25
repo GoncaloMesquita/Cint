@@ -1,21 +1,8 @@
-#    This file is part of DEAP.
-#
-#    DEAP is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Lesser General Public License as
-#    published by the Free Software Foundation, either version 3 of
-#    the License, or (at your option) any later version.
-#
-#    DEAP is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#    GNU Lesser General Public License for more details.
-#
-#    You should have received a copy of the GNU Lesser General Public
-#    License along with DEAP. If not, see <http://www.gnu.org/licenses/>.
-
-
-#    example which maximizes the sum of a list of integers
-#    each of which can be 0 or 1
+import math
+import pwd
+import random
+import numpy as np
+import math
 
 import random
 
@@ -33,29 +20,34 @@ toolbox = base.Toolbox()
 #                      which corresponds to integers sampled uniformly
 #                      from the range [0,1] (i.e. 0 or 1 with equal
 #                      probability)
-toolbox.register("attr_bool", random.randint, 0, 1)
+toolbox.register("attr_bool", random.randint, 1, 1000)
 
 # Structure initializers
 #                         define 'individual' to be an individual
 #                         consisting of 100 'attr_bool' elements ('genes')
 toolbox.register("individual", tools.initRepeat, creator.Individual, 
-    toolbox.attr_bool, 100)
+    toolbox.attr_bool, 2)
 
 # define the population to be a list of individuals
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 # the goal ('fitness') function to be maximized
-def evalOneMax(individual):
-    return sum(individual)/5,
+def eval (individual):
+    Z1= math.sqrt((individual[0])**2 + individual[1]**2)
+    Z2= math.sqrt((individual[0]-1)**2 + (individual[1]+1)**2)
+    try:
+        return (math.sin(4*Z1)/Z1) + (math.sin(2.5*Z2)/Z2),
+    except ZeroDivisionError:
+        return random.uniform(0.001, 0.009),
 
 #----------
 # Operator registration
 #----------
 # register the goal / fitness function
-toolbox.register("evaluate", evalOneMax)
+toolbox.register("evaluate", eval)
 
 # register the crossover operator
-toolbox.register("mate", tools.cxTwoPoint)
+toolbox.register("mate", tools.cxOnePoint)
 
 # register a mutation operator with a probability to
 # flip each attribute/gene of 0.05
@@ -70,11 +62,11 @@ toolbox.register("select", tools.selTournament, tournsize=3)
 #----------
 
 def main():
-    random.seed(64)
-
+    #random.seed(64)
+    n=300
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
-    pop = toolbox.population(n=300)
+    pop = toolbox.population(n)
 
     # CXPB  is the probability with which two individuals
     #       are crossed
@@ -88,7 +80,6 @@ def main():
     fitnesses = list(map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
-    print(fitnesses)
     
     print("  Evaluated %i individuals" % len(pop))
 
@@ -99,7 +90,7 @@ def main():
     g = 0
     
     # Begin the evolution
-    while max(fits) < 100 and g < 100:
+    while max(fits) < 11 and g < 100:
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
@@ -131,6 +122,7 @@ def main():
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = map(toolbox.evaluate, invalid_ind)
+        #print(fitnesses)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
         
@@ -151,7 +143,12 @@ def main():
         print("  Max %s" % max(fits))
         print("  Avg %s" % mean)
         print("  Std %s" % std)
-    
+        fit = np.array(fits)
+        best_10 = fit.argsort()
+        l = len(best_10)
+        print(best_10[l-1])
+        print(fit[best_10[l-1]])
+        print(pop[best_10[l-1]])
     print("-- End of (successful) evolution --")
     
     best_ind = tools.selBest(pop, 1)[0]
@@ -160,3 +157,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+#math.max(math.sin(4* math.sqrt(x**(2)+y**(2)))/(math.sqrt(x**(2)+y**(2))) + math.sin(⁡2.5  math.sqrt((x-1)**(2)+(y+1)**(2)))/(math.sqrt((x-1)**(2)+(y+1)**(2))))

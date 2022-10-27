@@ -20,7 +20,7 @@ toolbox = base.Toolbox()
 #                      which corresponds to integers sampled uniformly
 #                      from the range [0,1] (i.e. 0 or 1 with equal
 #                      probability)
-toolbox.register("attr_bool", random.uniform, 0, 1)
+toolbox.register("attr_bool", random.uniform, 0, 10)
 
 # Structure initializers    
 #                         define 'individual' to be an individual
@@ -48,7 +48,7 @@ toolbox.register("mate", tools.cxOnePoint)
 
 # register a mutation operator with a probability to
 # flip each attribute/gene of 0.05
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)   
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.5)   
 
 # operator for selecting individuals for breeding the next
 # generation: each individual of the current generation
@@ -59,7 +59,7 @@ toolbox.register("select", tools.selTournament, tournsize=3)
 #----------
 
 def main():
-    random.seed(64)
+    #random.seed(64)
     n=300
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
@@ -69,7 +69,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.5, 0.2
+    CXPB, MUTPB = 0.7, 0.4
     
     print("Start of evolution")
     
@@ -87,7 +87,7 @@ def main():
     g = 0
     
     # Begin the evolution
-    while max(fits) < 10 and g < 200:
+    while max(fits) < 4 and g < 50:
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
@@ -152,4 +152,3 @@ if __name__ == "__main__":
     main()
 
 
-#math.max(math.sin(4* math.sqrt(x**(2)+y**(2)))/(math.sqrt(x**(2)+y**(2))) + math.sin(⁡2.5  math.sqrt((x-1)**(2)+(y+1)**(2)))/(math.sqrt((x-1)**(2)+(y+1)**(2))))

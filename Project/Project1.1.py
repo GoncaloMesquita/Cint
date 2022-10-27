@@ -134,3 +134,4 @@ model_binary = prediction_binary(x_norm_train, y_train, 0)
 from joblib import dump, load
 dump(model_multi, 'Model_Multi_class.joblib')
 dump(model_binary, 'Model_Binary.joblib')
+print(df.keys())

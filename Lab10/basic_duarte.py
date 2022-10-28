@@ -35,11 +35,30 @@ def generate(size, pmin, pmax, smin, smax):
     part.smax = smax
     return part
 
+# def updateParticle(part, best, phi1, phi2):
+#     u1 = (random.uniform(0, phi1) for _ in range(len(part)))
+#     u2 = (random.uniform(0, phi2) for _ in range(len(part)))
+#     v_u1 = map(operator.mul, u1, map(operator.sub, part.best, part))
+#     v_u2 = map(operator.mul, u2, map(operator.sub, best, part))
+#     part.speed = list(map(operator.add, part.speed, map(operator.add, v_u1, v_u2)))
+#     for i, speed in enumerate(part.speed):
+#         if abs(speed) < part.smin:
+#             part.speed[i] = math.copysign(part.smin, speed)
+#         elif abs(speed) > part.smax:
+#             part.speed[i] = math.copysign(part.smax, speed)
+#     part[:] = list(map(operator.add, part, part.speed))
+
 def updateParticle(part, best, phi1, phi2):
-    u1 = (random.uniform(0, phi1) for _ in range(len(part)))
-    u2 = (random.uniform(0, phi2) for _ in range(len(part)))
+    w = [0.2]*len(part) ## VERIFICAR SE FUNCIONA
+    c1 = 0.5
+    c2 = 0.3
+    
+    u1 = (c1*random.uniform(0, phi1) for _ in range(len(part)))
+    u2 = (c2*random.uniform(0, phi2) for _ in range(len(part)))
     v_u1 = map(operator.mul, u1, map(operator.sub, part.best, part))
     v_u2 = map(operator.mul, u2, map(operator.sub, best, part))
+    
+    part.speed = map(operator.mul, w, part.speed)
     part.speed = list(map(operator.add, part.speed, map(operator.add, v_u1, v_u2)))
     for i, speed in enumerate(part.speed):
         if abs(speed) < part.smin:

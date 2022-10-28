@@ -40,27 +40,31 @@ def check_feasiblity(individual):
 
 def evaluate(individuals):
     value=[]
-    #limit_orders = 1000
-    value.append(cost_distance.values[0,individuals[0]])
-    for i in range(n_ind-2):
-        value.append(cost_distance.values[individuals[i],individuals[i+1]])
-    value.append(cost_distance.values[individuals[n_ind-2],0])
+    limit_orders = 1000
+    value.append(cost_distance.values[0,individuals[0]+1])
+    for i in range(n_ind-1):
+        limit_orders = limit_orders - orders['Orders'][individuals[i]+1] 
+        if orders['Orders'][individuals[i+1]+1] > limit_orders :
+            value.append(cost_distance.values[individuals[i]+1,0])
+            value.append(cost_distance.values[0,individuals[i+1]+1])
+            limit_orders = 1000
+        value.append(cost_distance.values[individuals[i]+1,individuals[i+1]+1])
+    value.append(cost_distance.values[individuals[n_ind-1]+1,0])
     fit_ind = (sum(value))
     return fit_ind,
 
 def minimization():
 
     random.seed(64)
-    n_pop=40
-    CXPB , MUTPB = 0.7, 0.3
+    n_pop=100
+    CXPB , MUTPB = 0.6, 0.3
     pop = toolbox.population(n_pop)
-    print(pop)
     fitnesses = list(map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
     
     g=0
-    while g < 250:
+    while g < 100:
         
         g = g + 1
         print('Genration ', g)
@@ -107,39 +111,24 @@ def minimization():
         print("  Max %s" % max(fits))
         print("  Avg %s" % mean)
         print("  Std %s" % std) 
-        #fit = np.array(fits)
-        #best_10 = fit.argsort()
-        #print("-- End of (successful) evolution --")
-        best_ind = tools.selBest(pop, 1)[0]
-        print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values)) 
-
-    count = 0
-    cost=[]
-    for i in (best_ind):
-        if i == 0 :
-            cost.append(count)
-            count = 0
-        count = orders['Orders'][i]+count
-    cost.append(count)
-    print("Contagem  ida", cost )
-        
-
+   
+    print("-- End of (successful) evolution --")
+    best_ind = tools.selBest(pop, 1)[0]
+    best_ind1 = [x+1 for x in best_ind]
+    print("Best individual is %s, %s" % (best_ind1, best_ind.fitness.values)) 
     
-
     return
 
 
 ##################################  MAIN  ############################################
 
-n_ind = 11
-name = np.arange(51)
-indiv = np.arange(1,11)
+n_ind = 30
 
-cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names = name)
+cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names =  np.arange(51))
 location = pd.read_csv('CustXY_WHCentral.csv')
 orders = pd.read_csv('CustOrd.csv')
 zeros = np.zeros(1, dtype=int)
-plot_costumer_location(location, n_ind)
+plot_costumer_location(location, n_ind+1)
 
 ################################  MINIMIZATION CLASS  ###################################
 
@@ -149,14 +138,14 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 ###############################  CREATING POPULATION  ######################################
 
 toolbox = base.Toolbox()
-toolbox.register('Genes', random.sample, range(1,11), 10 )
+toolbox.register('Genes', random.sample, range(0,n_ind), n_ind )
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.Genes)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 toolbox.register("evaluate", evaluate)
 toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
-toolbox.register("mate", tools.cxTwoPoint)
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.7)  
+toolbox.register("mate", tools.cxOrdered)
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)  
 toolbox.register("select", tools.selTournament, tournsize=4)
 
 

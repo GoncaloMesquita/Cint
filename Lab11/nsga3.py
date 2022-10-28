@@ -130,4 +130,5 @@ if __name__ == "__main__":
     ax.autoscale(tight=True)
     plt.legend()
     plt.tight_layout()
-    plt.savefig("nsga3.png")
+    plt.show()
+    # plt.savefig("nsga3.png")

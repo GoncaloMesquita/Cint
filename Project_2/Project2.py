@@ -7,19 +7,60 @@ from deap import tools
 import random
 from more_itertools import one
 
+def plot_costumer_location(xy, max_client):
+    
+    fig, ax = plt.subplots()
+    ax.scatter(xy['X'][0:max_client],  xy['Y'][0:max_client])
+    ax.scatter(xy['X'][0], xy['Y'][0], c = '#d62728' , label = "Warehouse")
+    
+    for i, txt in enumerate(xy['Customer XY'][0:max_client]):
+        ax.annotate(txt, (xy['X'][i], xy['Y'][i]))
+    
+    plt.show()
+        
+    return
+
+def penalty_fxn(individual):
+
+    return pow(int(evaluate(individual)[0]),2)
+
+def check_feasiblity(individual):
+    '''
+    Feasibility function for the individual. 
+    Returns True if individual is feasible (or constraint not violated),
+    False otherwise
+    '''
+    #if ((sum(costumers)) != sum(individual)):
+    if (len(set(individual)) != len(individual)):
+        # Indiviual contains repeated values
+        # Indiviual contains repeated values
+        return False
+    else:
+        return True
+
+def evaluate(individuals):
+    value=[]
+    #limit_orders = 1000
+    value.append(cost_distance.values[0,individuals[0]])
+    for i in range(n_ind-2):
+        value.append(cost_distance.values[individuals[i],individuals[i+1]])
+    value.append(cost_distance.values[individuals[n_ind-2],0])
+    fit_ind = (sum(value))
+    return fit_ind,
 
 def minimization():
 
     random.seed(64)
-    n_pop=100
-    CXPB , MUTPB = 0.6, 0.6
+    n_pop=40
+    CXPB , MUTPB = 0.7, 0.3
     pop = toolbox.population(n_pop)
+    print(pop)
     fitnesses = list(map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
     
     g=0
-    while g < 100:
+    while g < 250:
         
         g = g + 1
         print('Genration ', g)
@@ -27,14 +68,14 @@ def minimization():
         offspring = list(map(toolbox.clone, offspring))
 
         # CROSSOVER
-        """ 
+
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
 
             if random.random() < CXPB:
                 toolbox.mate(child1, child2)
                 del child1.fitness.values
-                del child2.fitness.values 
-         """
+                del child2.fitness.values  
+        
         #Mutation
 
         for mutant in offspring:
@@ -87,28 +128,18 @@ def minimization():
 
     return
 
-def evaluate(individuals):
-    value=[]
-    value.append(cost_distance.values[0,individuals[0]])
-    for i in range(n_ind):
-        value.append(cost_distance.values[individuals[i],individuals[i+1]])
-    value.append(cost_distance.values[individuals[n_ind],0])
-    fit_ind = (sum(value))
-    return fit_ind,
 
 ##################################  MAIN  ############################################
-n_ind = 51
-indiv = np.arange(n_ind)
 
-cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names = indiv)
+n_ind = 11
+name = np.arange(51)
+indiv = np.arange(1,11)
+
+cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names = name)
 location = pd.read_csv('CustXY_WHCentral.csv')
 orders = pd.read_csv('CustOrd.csv')
 zeros = np.zeros(1, dtype=int)
-costumers = np.append(indiv,zeros)
-
-plt.scatter(x=location['X'][1:], y=location['Y'][1:], marker='x')
-plt.scatter(x=location['X'][0], y=location['Y'][0])
-plt.show()
+plot_costumer_location(location, n_ind)
 
 ################################  MINIMIZATION CLASS  ###################################
 
@@ -118,12 +149,13 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 ###############################  CREATING POPULATION  ######################################
 
 toolbox = base.Toolbox()
-toolbox.register('Genes', np.random.permutation, costumers )
+toolbox.register('Genes', random.sample, range(1,11), 10 )
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.Genes)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 toolbox.register("evaluate", evaluate)
-toolbox.register("mate", tools.cxPartialyMatched)
+toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
+toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.7)  
 toolbox.register("select", tools.selTournament, tournsize=4)
 

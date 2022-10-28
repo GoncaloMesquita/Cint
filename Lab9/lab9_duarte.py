@@ -1,53 +1,42 @@
-import math
 import random
-import numpy as np
-import math
-
-import random
-
+import numpy as np 
 from deap import base
 from deap import creator
 from deap import tools
 
+
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
 
+
 toolbox = base.Toolbox()
 
-# Attribute generator 
-#                      define 'attr_bool' to be an attribute ('gene')
-#                      which corresponds to integers sampled uniformly
-#                      from the range [0,1] (i.e. 0 or 1 with equal
-#                      probability)
-toolbox.register("attr_bool", random.uniform, 0, 10)
+toolbox.register("attr_float", random.uniform, 0, 10)
 
-# Structure initializers    
-#                         define 'individual' to be an individual
-#                         consisting of 100 'attr_bool' elements ('genes')
 toolbox.register("individual", tools.initRepeat, creator.Individual, 
-    toolbox.attr_bool, 2)
+    toolbox.attr_float, 2)
 
-# define the population to be a list of individuals
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-# the goal ('fitness') function to be maximized
-def eval (individual):
-    Z1= math.sqrt((individual[0])**2 + individual[1]**2)
-    Z2= math.sqrt((individual[0]-1)**2 + (individual[1]+1)**2)
-    return (math.sin(4*Z1)/Z1) + (math.sin(2.5*Z2)/Z2),
+def evalOneMax(individual):
+    Z1 = np.sqrt(individual[0]**2 + individual[1]**2)
+    Z2 = np.sqrt((individual[0]-1)**2 + (individual[1]+1)**2)
+    f1 = np.sin(4*Z1)/Z1 + np.sin(2.5*Z2)/Z2
+    return f1,
+
 
 #----------
 # Operator registration
 #----------
 # register the goal / fitness function
-toolbox.register("evaluate", eval)
+toolbox.register("evaluate", evalOneMax)
 
 # register the crossover operator
-toolbox.register("mate", tools.cxOnePoint)
+toolbox.register("mate", tools.cxTwoPoint)
 
 # register a mutation operator with a probability to
 # flip each attribute/gene of 0.05
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.5)   
+toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=20, indpb=0.2)
 
 # operator for selecting individuals for breeding the next
 # generation: each individual of the current generation
@@ -55,20 +44,19 @@ toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.5)
 # drawn randomly from the current generation.
 toolbox.register("select", tools.selTournament, tournsize=3)
 
-#----------
 
 def main():
-    #random.seed(64)
-    n=300
+    random.seed(64)
+
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
-    pop = toolbox.population(n)
+    pop = toolbox.population(n=300)
 
     # CXPB  is the probability with which two individuals
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.7, 0.4
+    CXPB, MUTPB = 0.5, 0.2
     
     print("Start of evolution")
     
@@ -85,6 +73,8 @@ def main():
     # Variable keeping track of the number of generations
     g = 0
     
+    # Hall of fame
+    HoF = tools.HallOfFame(10)
     # Begin the evolution
     while g < 1000:
         # A new generation
@@ -118,12 +108,14 @@ def main():
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = map(toolbox.evaluate, invalid_ind)
-        #print(fitnesses)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
         
         print("  Evaluated %i individuals" % len(invalid_ind))
         
+        # Hall of fame update
+        HoF.update(pop)
+
         # The population is entirely replaced by the offspring
         pop[:] = offspring
         
@@ -139,15 +131,16 @@ def main():
         print("  Max %s" % max(fits))
         print("  Avg %s" % mean)
         print("  Std %s" % std)
-        #fit = np.array(fits)
-        #best_10 = fit.argsort()
-        print("-- End of (successful) evolution --")
+
+        
+
     
-        best_ind = tools.selBest(pop, 1)[0]
-        print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
+    print("-- End of (successful) evolution --")
     
+    best_ind = tools.selBest(pop, 1)[0]
+    print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
+
+    print('Hall of fame:',HoF)
 
 if __name__ == "__main__":
     main()
-
-

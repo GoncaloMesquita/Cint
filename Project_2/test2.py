@@ -6,6 +6,9 @@ from deap import creator
 from deap import tools
 import random
 
+from itertools import chain
+from operator import attrgetter
+
 from deap.benchmarks.tools import diversity, convergence, hypervolume
 
 
@@ -153,7 +156,78 @@ def invert_mutation(ind):
     # print(ind)
     return ind
 
+#### Modified NSGA2
+def selNSGA2(individuals, k, nd='standard'):
 
+    if nd == 'standard':
+        pareto_fronts = tools.sortNondominated(individuals, k)
+    elif nd == 'log':
+        pareto_fronts = tools.sortLogNondominated(individuals, k)
+    else:
+        raise Exception('selNSGA2: The choice of non-dominated sorting '
+                        'method "{0}" is invalid.'.format(nd))
+
+    for front in pareto_fronts:
+        assignEuclDist(front)
+        # print(2)
+    chosen = list(chain(*pareto_fronts[:-1]))
+    k = k - len(chosen)
+    if k > 0:
+        sorted_front = sorted(pareto_fronts[-1], key=attrgetter("fitness.crowding_dist"), reverse=True)
+        chosen.extend(sorted_front[:k])
+
+    return chosen
+
+def assignEuclDist(individuals):
+    """Assign a crowding distance to each individual's fitness. The
+    crowding distance can be retrieve via the :attr:`crowding_dist`
+    attribute of each individual's fitness.
+    """
+    if len(individuals) == 0:
+        return
+
+    distances = [0.0] * len(individuals)
+    crowd = [(ind.fitness.values, i) for i, ind in enumerate(individuals)]
+    # print(crowd)
+    # print(1)
+    # print()
+
+
+    crowd.sort(key=lambda element: element[0][1])
+    # print('crowd',crowd)
+    distances[crowd[0][1]] = float("inf")
+    distances[crowd[-1][1]] = float("inf")
+
+    # if crowd[-1][0][i] == crowd[0][0][i]:
+    #     continue
+
+    for prev, cur, next in zip(crowd[:-2], crowd[1:-1], crowd[2:]):
+        # print('prev', prev)
+        # print('cur',cur)
+        # print('next',next)
+        distances[cur[1]] = np.linalg.norm(np.array(next[0]) - np.array(cur[0])) + np.linalg.norm(np.array(cur[0]) - np.array(prev[0]))
+    # nobj = len(individuals[0].fitness.values)
+
+    # for i in range(nobj):
+    #     crowd.sort(key=lambda element: element[0][i])
+    #     print(crowd)
+    #     print('\n')
+    #     distances[crowd[0][1]] = float("inf")
+    #     distances[crowd[-1][1]] = float("inf")
+    #     if crowd[-1][0][i] == crowd[0][0][i]:
+    #         continue
+
+    #     for prev, cur, next in zip(crowd[:-2], crowd[1:-1], crowd[2:]):
+    #         print('prev', prev)
+    #         print('cur',cur)
+    #         print('next',next)
+    #         distances[cur[1]] += (next[0][i] - prev[0][i]) 
+        # norm = nobj * float(crowd[-1][0][i] - crowd[0][0][i])
+        # for prev, cur, next in zip(crowd[:-2], crowd[1:-1], crowd[2:]):
+        #     distances[cur[1]] += (next[0][i] - prev[0][i]) / norm
+
+    for i, dist in enumerate(distances):
+        individuals[i].fitness.crowding_dist = dist
 
 def evaluate(individuals):
     # print(individuals)
@@ -179,13 +253,15 @@ def evaluate(individuals):
     return dist_cost, transp_cost
 
 def minimization():
-    runs = 1 #number of runs
+    runs = 20 #number of runs
     min_avg=1000000000
+    PF=tools.ParetoFront()
     for i in range(runs):
-        random.seed(64)
+        print(i)
+        # random.seed(64)
 
         # random.seed(41)
-        # n_pop=4
+        # n_pop=12
         n_pop=100
         # CXPB = 0.6
         CXPB = 1
@@ -194,7 +270,7 @@ def minimization():
 
         
 
-        PF=tools.ParetoFront()
+        # PF=tools.ParetoFront()
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("std", np.std, axis=0)
@@ -227,7 +303,7 @@ def minimization():
         #pareto front update
         PF.update(population= pop)
 
-        hv = [None]*(NGEN+1) #init hypervolume saving vector
+        hv = [0]*(NGEN) #init hypervolume saving vector
 
         while g < NGEN-1:
             
@@ -310,8 +386,9 @@ def minimization():
             pop_best=pop
             min_avg=f1+f2
             hv_best = hv
+        PF.update(pop)
 
-    PF.update(pop_best)
+    # PF.update(pop_best)
 
     pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
     plt.title('Pareto curve for the best run')
@@ -321,7 +398,7 @@ def minimization():
             
     # plt.scatter(front[:,0], front[:,1], c="b")
     plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
-    # plt.show()
+    plt.show()
 
     print("-- End of (successful) evolution --")
     # best_ind = tools.selBest(pop, 1)[0]
@@ -342,21 +419,21 @@ def minimization():
     plt.title('Hypervolume curve for the best run')
     plt.xlabel('Generations')
     plt.ylabel('Hypervolume')
-    plt.show()
+    # plt.show()
     return
 
 
 ##################################  MAIN  ############################################
-write = True
-while write:
-    print('How many cities will the problem have (10, 30 or 50)?\n')
-    n_cities = int(input())
-    if n_cities != 10 and n_cities != 30 and n_cities != 50:
-        print('Error: please choose a number of cities of: 10, 30 or 50 \n')
-    else:
-        write = False
+# write = True
+# while write:
+#     print('How many cities will the problem have (10, 30 or 50)?\n')
+#     n_cities = int(input())
+#     if n_cities != 10 and n_cities != 30 and n_cities != 50:
+#         print('Error: please choose a number of cities of: 10, 30 or 50 \n')
+#     else:
+#         write = False
 
-
+n_cities = 50
 cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names =  np.arange(51))
 location = pd.read_csv('CustXY_WHCentral.csv')
 orders = pd.read_csv('CustOrd.csv')
@@ -384,8 +461,8 @@ toolbox.register("evaluate", evaluate)
 toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
 toolbox.register("mate", greedy_crossover)
 toolbox.register("mutate", invert_mutation)  
-toolbox.register("select", tools.selNSGA2)
-
+# toolbox.register("select", tools.selNSGA2)
+toolbox.register("select", selNSGA2)
 
 
 

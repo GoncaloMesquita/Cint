@@ -37,37 +37,24 @@ def check_feasiblity(individual):
 
 def greedy_crossover(ind1, ind2):
     # We must keep the original values somewhere before scrambling everything
-
     temp1, temp2 = ind1.copy(), ind2.copy()
     temp3, temp4 = ind1.copy(), ind2.copy()
-
-    # print(evaluate(temp1))
 
     d = temp1[0]
     ind1, ind2 = [], []
     ind1.append(d)
     
     while len(temp1)>1:
-        # j1 = 1000000
-        # j2 = 1000000
-        # print(temp1)
-        # print(temp2)
         try:
             dr1 = temp1[temp1.index(d)+1] 
         except:
             dr1 = temp1[0]
-
         j1 = cost_distance.iloc[d+1,dr1+1]
-        # print(j1)
-
-
         try:
             dr2 = temp2[temp2.index(d)+1]
         except:
             dr2 = temp2[0]
-
         j2 = cost_distance.iloc[d+1,dr2+1]
-        # print(j2)
 
         temp1.remove(d)
         temp2.remove(d)
@@ -79,53 +66,32 @@ def greedy_crossover(ind1, ind2):
             ind1.append(dr2)
             d=dr2
 
-    # print(evaluate(ind1))
-    # print(evaluate(temp4))
-
-
     d = temp3[0]
     ind2.append(d)
     while len(temp3)>1:
-        # j1 = 1000000
-        # j2 = 1000000
-        # print(temp3)
-        # print(temp4)
-        # print(ind2)
+        
         try:
             dl1 = temp3[temp3.index(d)-1]
-            
         except:
             dl1 = temp3[-1]
 
-        # j1 = cost_distance.iloc[d+1,dl1+1]
         j1 = travel_cost[d+1,dl1+1]
-        # print(j1)
-
-
         try:
             dl2 = temp4[temp4.index(d)-1]
                   
         except:
             dl2 = temp4[-1]
 
-        # j2 = cost_distance.iloc[d+1,dl2+1]
         j2 = travel_cost[d+1,dl2+1]
-        # print(j2)
 
         temp3.remove(d)
         temp4.remove(d)
-
         if j1<=j2:
             ind2.append(dl1)
             d=dl1
         else:
             ind2.append(dl2)
             d=dl2
-    # print(evaluate(ind2))
-    # print(1)
-
-    # print(ind1)
-    # print(ind2) 
 
     return ind1, ind2
     
@@ -133,15 +99,11 @@ def invert_mutation(ind):
     temp = ind.copy()
     size = len(temp)
     m1 = temp[random.randint(0, size-2)]
-    # print(temp)
     cost = 100000
     for element in temp[ind.index(m1)+1:]:
-        
         if cost_distance.iloc[m1+1,element+1]<cost: 
             cost = cost_distance.iloc[m1+1,element+1]
             m2 = element
-            # print(m2)
-
 
     ind[ind.index(m2)], ind[ind.index(m1)+1]  = temp[temp.index(m1)+1], temp[temp.index(m2)] 
 

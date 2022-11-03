@@ -353,5 +353,28 @@ toolbox.register("select", tools.selNSGA2)
 
 minimization()
 
-# [  1442. 732540.] 
-# [  1171. 615590.] 
+## Tools selNGA2
+# Min Cost: (Dist;Cost) = (306.0,222120.0)
+# Min Dist: (Dist;Cost) = (306.0,222120.0)
+# 314.26666666666665
+
+# Min Cost: (Dist;Cost) = (648.0,330560.0)
+# Min Dist: (Dist;Cost) = (603.0,332780.0)
+# 711.1
+
+# Min Cost: (Dist;Cost) = (1003.0,487360.0)
+# Min Dist: (Dist;Cost) = (1003.0,487360.0)
+# 1087.9
+
+## Modified NGA2
+# Min Cost: (Dist;Cost) = (306.0,222120.0)
+# Min Dist: (Dist;Cost) = (306.0,222120.0)
+# 312.96666666666664 
+
+# Min Cost: (Dist;Cost) = (617.0,312820.0)
+# Min Dist: (Dist;Cost) = (588.0,314990.0)
+# 698.5333333333333
+
+# Min Cost: (Dist;Cost) = (931.0,452860.0)
+# Min Dist: (Dist;Cost) = (927.0,453020.0)
+# 1103.4

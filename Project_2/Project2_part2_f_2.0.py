@@ -11,25 +11,22 @@ from operator import attrgetter
 
 from deap.benchmarks.tools import  hypervolume
 
-
+################################################################################################ Functions ################################################################################################
 def check_feasiblity(individual):
     '''
     Feasibility function for the individual. 
     Returns True if individual is feasible (or constraint not violated),
     False otherwise
     '''
-    if (len(set(individual)) != len(individual)):
-        # Indiviual contains repeated values
+    if (len(set(individual)) != len(individual)): # Verify if indiviual contains repeated cities
         return False
     else:
         return True
-
+# Crossover operator
 def greedy_crossover(ind1, ind2):
-    # We must keep the original values somewhere before scrambling everything
-
+    # We must keep the original indiviuals somewhere before scrambling everything
     temp1, temp2 = ind1.copy(), ind2.copy()
     temp3, temp4 = ind1.copy(), ind2.copy()
-
 
     d = temp1[0]
     ind1, ind2 = [], []
@@ -42,7 +39,6 @@ def greedy_crossover(ind1, ind2):
             dr1 = temp1[0]
 
         j1 = cost_distance.iloc[d+1,dr1+1]
-
 
         try:
             dr2 = temp2[temp2.index(d)+1]
@@ -61,8 +57,6 @@ def greedy_crossover(ind1, ind2):
             ind1.append(dr2)
             d=dr2
 
-
-
     d = temp3[0]
     ind2.append(d)
     while len(temp3)>1:
@@ -73,7 +67,6 @@ def greedy_crossover(ind1, ind2):
             dl1 = temp3[-1]
 
         j1 = travel_cost[d+1,dl1+1]
-
 
         try:
             dl2 = temp4[temp4.index(d)-1]
@@ -94,8 +87,8 @@ def greedy_crossover(ind1, ind2):
             d=dl2
 
     return ind1, ind2
-    
-def invert_mutation(ind):
+# Mutation operator    
+def greedy_invert_mutation(ind):
     temp = ind.copy()
     size = len(temp)
     m1 = temp[random.randint(0, size-2)]
@@ -106,13 +99,10 @@ def invert_mutation(ind):
             cost = cost_distance.iloc[m1+1,element+1]
             m2 = element
 
-
-    ind[ind.index(m2)], ind[ind.index(m1)+1]  = temp[temp.index(m1)+1], temp[temp.index(m2)] 
-
-    
+    ind[ind.index(m2)], ind[ind.index(m1)+1]  = temp[temp.index(m1)+1], temp[temp.index(m2)]     
     return ind
 
-#### Modified NSGA2
+# Selection operator
 def Mod_NSGA2(individuals, k, nd='standard'):
 
     if nd == 'standard':
@@ -145,13 +135,10 @@ def assignEuclDist(individuals):
     distances = [0.0] * len(individuals)
     crowd = [(ind.fitness.values, i) for i, ind in enumerate(individuals)]
 
-
     crowd.sort(key=lambda element: element[0][1])
 
     distances[crowd[0][1]] = float("inf")
     distances[crowd[-1][1]] = float("inf")
-
-
 
     for prev, cur, next in zip(crowd[:-2], crowd[1:-1], crowd[2:]):
         distances[cur[1]] = np.linalg.norm(np.array(next[0]) - np.array(cur[0])) + np.linalg.norm(np.array(cur[0]) - np.array(prev[0]))
@@ -187,14 +174,12 @@ def minimization():
     f1_min = []
     for i in range(runs):
         print(i)
-        # random.seed(64)
         random.seed(34+i)
-        # random.seed(41)
-        n_pop=100
+        n_pop= 100
         CXPB = 1
         NGEN = 100
+        g=0
 
-        
 
         PF=tools.ParetoFront()
 
@@ -207,9 +192,6 @@ def minimization():
         logbook = tools.Logbook()
         logbook.header = "gen", "evals", "std", "min", "avg", "max"
 
-
-
-
         pop = toolbox.population(n_pop)
 
         # Evaluate the individuals with an invalid fitness
@@ -218,7 +200,6 @@ def minimization():
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
         
-        g=0
 
         pop = toolbox.select(pop, len(pop))
 
@@ -227,18 +208,16 @@ def minimization():
         print(logbook.stream)
 
         #pareto front update
-        PF.update(population= pop)
+        PF.update(population = pop)
 
         hv = [0]*(NGEN) #init hypervolume saving vector
 
         ref_point = record['max']
         while g < NGEN-1:
-            
             g = g + 1
 
             offspring = tools.selTournamentDCD(pop, len(pop))
             offspring = [toolbox.clone(ind) for ind in offspring]
-
             
             # CROSSOVER
             for child1, child2 in zip(offspring[::2], offspring[1::2]):
@@ -246,13 +225,11 @@ def minimization():
                     toolbox.mate(child1, child2)
                     del child1.fitness.values
                     del child2.fitness.values  
-
             
             # Mutation
             for mutant in offspring:
                 toolbox.mutate(mutant)
                 del mutant.fitness.values
-
             
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -260,63 +237,58 @@ def minimization():
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
-
-
-
             pop = toolbox.select(offspring, len(offspring))
-            # pop = toolbox.select(pop + offspring, len(pop))
 
             record = stats.compile(pop)
             logbook.record(gen=g, evals=len(invalid_ind), **record)
             print(logbook.stream)
 
-
-            #pareto front update
-            PF.update(population= pop) 
-
-            #save the hypervolume of this generation
-            hv[g] = hypervolume(pop, ref_point)
+            
+            PF.update(population= pop) # pareto front update
+            
+            hv[g] = hypervolume(pop, ref_point) # save the hypervolume of this generation
         
 
-        # pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
-        # plt.figure()
-        # plt.title('Pareto curve')
-        # plt.xlabel('Cost')
-        # plt.ylabel('Dist')
-        # plt.scatter(pareto_front_values[:,0],pareto_front_values[:,1], c="r")
+        pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
+        plt.figure()
+        plt.title('Pareto curve')
+        plt.xlabel('Dist')
+        plt.ylabel('Cost')
+        plt.scatter(pareto_front_values[:,0],pareto_front_values[:,1], c="r")
 
-        # if n_cities == 10:
-        #     plt.savefig('MOOP_10\Pareto\pareto10_%s.png' % i)
-        # elif n_cities == 30:
-        #     plt.savefig('MOOP_30\Pareto\pareto30_%s.png' % i)
-        # else:
-        #     plt.savefig('MOOP_50\Pareto\pareto50_%s.png' % i)
+        if n_cities == 10:
+            plt.savefig('MOOP_10\Pareto\pareto10_%s.png' % i)
+        elif n_cities == 30:
+            plt.savefig('MOOP_30\Pareto\pareto30_%s.png' % i)
+        else:
+            plt.savefig('MOOP_50\Pareto\pareto50_%s.png' % i)
 
-        #save best population (taking in account the sum of Cost and Time)
+        #save best population (taking in account the sum of cost and distance normalized)
         f1, f2 = record['min']
         f1_min.append(f1)
-        if f1+f2 < min_min:
+        if f1/ref_point[0] + f2/ref_point[1] < min_min:
             pop_best=pop
-            min_min=f1+f2
+            min_min = f1/ref_point[0] + f2/ref_point[1]
             hv_best = hv
-        # plt.figure()
-        # plt.plot(hv)
-        # plt.title('Hypervolume evolution curve')
-        # plt.xlabel('Generations')
-        # plt.ylabel('Hypervolume')
-        # # plt.show()
-        # if n_cities == 10:
-        #     plt.savefig('MOOP_10\Hypervolume\Hyperv10_%s.png' % i)
-        # elif n_cities == 30:
-        #     plt.savefig('MOOP_30\Hypervolume\Hyperv30_%s.png' % i)
-        # else:
-        #     plt.savefig('MOOP_50\Hypervolume\Hyperv50_%s.png' % i)
+
+        plt.figure()
+        plt.plot(hv)
+        plt.title('Hypervolume evolution curve')
+        plt.xlabel('Generations')
+        plt.ylabel('Hypervolume')
+        # plt.show()
+        if n_cities == 10:
+            plt.savefig('MOOP_10\Hypervolume\Hyperv10_%s.png' % i)
+        elif n_cities == 30:
+            plt.savefig('MOOP_30\Hypervolume\Hyperv30_%s.png' % i)
+        else:
+            plt.savefig('MOOP_50\Hypervolume\Hyperv50_%s.png' % i)
 
     PF.update(pop_best)
     pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
     plt.title('Pareto curve for the best run')
-    plt.xlabel('Cost')
-    plt.ylabel('Dist')
+    plt.xlabel('Dist')
+    plt.ylabel('Cost')
     # # front = np.array([ind.fitness.values for ind in pop_best])
             
     # # plt.scatter(front[:,0], front[:,1], c="b")
@@ -340,11 +312,11 @@ def minimization():
     plt.ylabel('Hypervolume')
     # # plt.show()
 
-    # print(np.mean(f1_min))
+    print(np.mean(f1_min))
     return
 
 
-##################################  MAIN  ############################################
+################################################################################################  MAIN  ################################################################################################
 write = True
 while write:
     print('How many cities will the problem have (10, 30 or 50)?\n')
@@ -354,7 +326,6 @@ while write:
     else:
         write = False
 
-# n_cities = 50
 
 cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names =  np.arange(51))
 location = pd.read_csv('CustXY_WHCentral.csv')
@@ -378,37 +349,13 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("evaluate", evaluate)
 toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
 toolbox.register("mate", greedy_crossover)
-toolbox.register("mutate", invert_mutation)  
+toolbox.register("mutate", greedy_invert_mutation)  
 toolbox.register("select", Mod_NSGA2)
 
 
 
 minimization()
 
-## Tools selNGA2
-# Min Cost: (Dist;Cost) = (306.0,222120.0)
-# Min Dist: (Dist;Cost) = (306.0,222120.0)
-# 314.26666666666665
 
-# Min Cost: (Dist;Cost) = (648.0,330560.0)
-# Min Dist: (Dist;Cost) = (603.0,332780.0)
-# 711.1
-
-# Min Cost: (Dist;Cost) = (1003.0,487360.0)
-# Min Dist: (Dist;Cost) = (1003.0,487360.0)
-# 1087.9
-
-## Modified NGA2
-# Min Cost: (Dist;Cost) = (306.0,222120.0)
-# Min Dist: (Dist;Cost) = (306.0,222120.0)
-# 312.96666666666664 
-
-# Min Cost: (Dist;Cost) = (617.0,312820.0)
-# Min Dist: (Dist;Cost) = (588.0,314990.0)
-# 698.5333333333333
-
-# Min Cost: (Dist;Cost) = (931.0,452860.0)
-# Min Dist: (Dist;Cost) = (927.0,453020.0)
-# 1103.4
  
  

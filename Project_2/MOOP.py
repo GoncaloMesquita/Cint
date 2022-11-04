@@ -210,8 +210,8 @@ def main():
 
         g=0 # generation initialization
 
-        #parefront initialization
-        PF=tools.ParetoFront()
+        
+        PF=tools.ParetoFront() # pareto front initialization
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("std", np.std, axis=0)
@@ -284,9 +284,9 @@ def main():
         # pareto front plot for one run
         plt.figure()
         plt.title('Pareto curve')
-        plt.xlabel('Dist')
-        plt.ylabel('Cost')
-        plt.scatter(pareto_front_values[:,0],pareto_front_values[:,1], c="r")
+        plt.xlabel('Cost')
+        plt.ylabel('Dist')
+        plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
 
         # save plots
         # if n_cities == 10:
@@ -325,8 +325,8 @@ def main():
     PF.update(pop_best)
     pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
     plt.title('Pareto curve for the best run')
-    plt.xlabel('Dist')
-    plt.ylabel('Cost')
+    plt.xlabel('Cost')
+    plt.ylabel('Dist')
     # front = np.array([ind.fitness.values for ind in pop_best])
             
     # plt.scatter(front[:,0], front[:,1], c="b")

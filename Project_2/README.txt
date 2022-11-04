@@ -3,7 +3,7 @@ When testing SOOP.py the user will first be prompted to input:
  -The location of the warehouse for which he wishes to test the EA: center or corner 
  -The number of orders for which he wishes to test the EA: file or fixed  (file to use the orders which are in the file and fixed to have all the orders equal to 50)
 -The use of the heuristic: yes or no (yes if we want the results using the heuristic or no if we want the results without the heuristic)
-After that, EA will start to run for 30 iterations, each one with a different random seed. After runnig the 30 iterations it will be printed on the console
+After that, EA will start to run for 30 iterations, each one with a different random seed. After running the 30 iterations it will be printed on the console
 some statistics which represent:
 -Mean of the minimum of the 30 runs
 -The Stander deviation of the minimums of the 30 runs

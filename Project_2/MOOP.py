@@ -24,7 +24,7 @@ def check_feasiblity(individual):
         return True
 
 # Crossover operator
-def greedy_crossover(ind1, ind2):
+def Greedy_crossover(ind1, ind2):
     ''' 
     Greedy crossover function produces two new individuals.
     Determine a city d as a starting point of crossover and set it as the first genetic point in both new individuals.
@@ -99,7 +99,7 @@ def greedy_crossover(ind1, ind2):
 
 
 # Mutation operator    
-def greedy_invert_mutation(ind):
+def Greedy_invert_mutation(ind):
     '''
     Greedy invert mutation function produces a new individual.
     First a city m1 is chosen at random. Then it finds the city m2 with the shortest distance
@@ -123,7 +123,7 @@ def greedy_invert_mutation(ind):
 def Mod_NSGA2(individuals, k, nd='standard'):
     '''
     Normal NSGA 2 algorithm with a small modification, where instead of using 
-    the crowding distance in use the Euclidean distance.
+    the crowding distance it uses the Euclidean distance.
     '''
 
     if nd == 'standard':
@@ -194,7 +194,7 @@ def evaluate(individuals):
     transp_cost = sum(transp_value) # total traveling cost of the individual 
     return dist_cost, transp_cost
 
-def main():
+def main(plot_10, plot_30):
     '''
     The main function goes through the whole genetic algorithm that was implemented
     '''
@@ -282,12 +282,22 @@ def main():
         pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
         
         # pareto front plot for one run
-        plt.figure()
-        plt.title('Pareto curve')
-        plt.xlabel('Cost')
-        plt.ylabel('Dist')
-        plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
+        # plt.figure()
+        # plt.title('Pareto curve')
+        # plt.xlabel('Cost')
+        # plt.ylabel('Dist')
+        # if n_cities == 10: 
+        #     plot_10 = plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
+        # elif n_cities == 30: 
+        #     plot_30 = plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="g")
+        # elif n_cities == 50: 
+        #     plot_50 = plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="b")
 
+        # Save all pareto fronts from all runs in one image
+        # if n_cities==50:
+        #     plt.legend([plot_10, plot_30, plot_50],[ '10 cities','30 cities','50 cities'])
+        #     # plt.savefig('MOOP\Pareto_curve.png')
+       
         # save plots
         # if n_cities == 10:
         #     plt.savefig('MOOP_10\Pareto\pareto10_%s.png' % i)
@@ -296,12 +306,13 @@ def main():
         # else:
         #     plt.savefig('MOOP_50\Pareto\pareto50_%s.png' % i)
 
+
         # hypervolume evolution for one run
-        plt.figure()
-        plt.plot(hv)
-        plt.title('Hypervolume evolution curve')
-        plt.xlabel('Generations')
-        plt.ylabel('Hypervolume')
+        # plt.figure()
+        # plt.plot(hv)
+        # plt.title('Hypervolume evolution curve')
+        # plt.xlabel('Generations')
+        # plt.ylabel('Hypervolume')
         # plt.show()
 
         # save plots
@@ -319,27 +330,38 @@ def main():
             pop_best=pop
             min_min = f1/ref_point[0] + f2/ref_point[1]
             hv_best = hv
+   
 
-        
+    
     # Plot best pareto solutions and best population
     PF.update(pop_best)
     pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
-    plt.title('Pareto curve for the best run')
-    plt.xlabel('Cost')
-    plt.ylabel('Dist')
     # front = np.array([ind.fitness.values for ind in pop_best])
-            
+    # plt.title('Pareto curve for the best run')
+    # plt.xlabel('Cost')
+    # plt.ylabel('Dist')            
     # plt.scatter(front[:,0], front[:,1], c="b")
-    plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
+    # plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
     # plt.show()
 
     # Plot hypervolume evolution for the best population
-    plt.figure()
-    plt.plot(hv_best)
-    plt.title('Hypervolume curve for the best run')
-    plt.xlabel('Generations')
-    plt.ylabel('Hypervolume')
-    # # plt.show()
+    # plt.figure()
+    # plt.plot(hv_best)
+    # plt.title('Hypervolume evolution curve')
+    # plt.xlabel('Generations')
+    # plt.ylabel('Hypervolume')
+    # if n_cities == 10: 
+    #     plot_10 = plt.plot(hv_best, c="r", label='10 cities')
+    # elif n_cities == 30: 
+    #     plot_30 = plt.plot(hv_best, c="g", label='30 cities')
+    # elif n_cities == 50: 
+    #     plot_50 = plt.plot(hv_best, c="b", label='50 cities')
+    # plt.show()
+
+    # Save Hypervolume evolutions from 3 best populations (one for each case) from all runs in one image
+    # if n_cities==50:
+    #     plt.legend()
+    #     plt.savefig('MOOP\Hypervolume_evolution.png')
 
     print("-- End of (successful) evolution --")
 
@@ -352,50 +374,53 @@ def main():
 
 
     # print(np.mean(f1_min)) # average of minimum distances over all runs 
-    return
+    return plot_10, plot_30
 
 
 ################################################################################################  MAIN  ################################################################################################
-# Get user input
-write = True
-while write:
-    print('How many cities will the problem have (10, 30 or 50)?\n')
-    n_cities = int(input())
-    if n_cities != 10 and n_cities != 30 and n_cities != 50:
-        print('Error: please choose a number of cities of: 10, 30 or 50 \n')
-    else:
-        write = False
+n_cases = 1 # how many cases to test (if 3 it could be 1 test per case (10, 30 and 50))
+plot_10, plot_30 = 0,0
+for i in range(n_cases):
+    # Get user input
+    write = True
+    while write:
+        print('How many cities will the problem have (10, 30 or 50)?\n')
+        n_cities = int(input())
+        if n_cities != 10 and n_cities != 30 and n_cities != 50:
+            print('Error: please choose a number of cities of: 10, 30 or 50 \n')
+        else:
+            write = False
 
-# Get problem data
-cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names =  np.arange(51))
-location = pd.read_csv('CustXY_WHCentral.csv')
-orders = pd.read_csv('CustOrd.csv')
+    # Get problem data
+    cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names =  np.arange(51))
+    location = pd.read_csv('CustXY_WHCentral.csv')
+    orders = pd.read_csv('CustOrd.csv')
 
-# Generate travel cost matrix
-a = cost_distance.iloc[:n_cities+1,:n_cities+1].to_numpy()
-b = orders["Orders"].iloc[:n_cities+1].to_numpy()*np.identity(n_cities+1)
-travel_cost = np.matmul(a, b)
+    # Generate travel cost matrix
+    a = cost_distance.iloc[:n_cities+1,:n_cities+1].to_numpy()
+    b = orders["Orders"].iloc[:n_cities+1].to_numpy()*np.identity(n_cities+1)
+    travel_cost = np.matmul(a, b)
 
-################################  PROBLEM OBJECTIVE  ################################
+    ################################  PROBLEM OBJECTIVE  ################################
 
-creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0))
-creator.create("Individual", list, fitness=creator.FitnessMin)
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
 
-################################  POPULATION  ################################
+    ################################  POPULATION  ################################
 
-toolbox = base.Toolbox()
-toolbox.register('Genes', random.sample, range(0,n_cities), n_cities)
-toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.Genes)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox = base.Toolbox()
+    toolbox.register('Genes', random.sample, range(0,n_cities), n_cities)
+    toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.Genes)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-################################ OPERATORS ################################
+    ################################ OPERATORS ################################
 
-toolbox.register("evaluate", evaluate)
-toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
-toolbox.register("mate", greedy_crossover)
-toolbox.register("mutate", greedy_invert_mutation)  
-toolbox.register("select", Mod_NSGA2)
+    toolbox.register("evaluate", evaluate)
+    toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
+    toolbox.register("mate", Greedy_crossover)
+    toolbox.register("mutate", Greedy_invert_mutation)  
+    toolbox.register("select", Mod_NSGA2)
 
-################################ MINIMIZATION ################################
+    ################################ MINIMIZATION ################################
 
-main()
+    plot_10, plot_30 = main(plot_10, plot_30)

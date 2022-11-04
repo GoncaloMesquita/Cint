@@ -234,19 +234,19 @@ def main():
         pop = toolbox.select(pop, len(pop))
 
         record = stats.compile(pop)
-        logbook.record(gen=0, evals=len(invalid_ind), **record)
+        logbook.record(gen=0, evals=len(invalid_ind), **record) # tracking the statistics of each generation
         print(logbook.stream)
 
         #pareto front update
         PF.update(population = pop)
 
-        hv = [0]*(NGEN) #initialize hypervolume saving vector
+        hv = [0]*(NGEN) # initialize hypervolume saving vector
 
         ref_point = record['max'] # get worst point from first generation and set as reference point for hypervolume calculation
         while g < NGEN-1:
             g = g + 1 
 
-            offspring = tools.selTournamentDCD(pop, len(pop))
+            offspring = tools.selTournamentDCD(pop, len(pop)) # selecting a diversified offspring
             offspring = [toolbox.clone(ind) for ind in offspring]
             
             # Crossover
@@ -267,7 +267,7 @@ def main():
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
-            pop = toolbox.select(offspring, len(offspring))
+            pop = toolbox.select(offspring, len(offspring)) # create new population
 
             record = stats.compile(pop)
             logbook.record(gen=g, evals=len(invalid_ind), **record)

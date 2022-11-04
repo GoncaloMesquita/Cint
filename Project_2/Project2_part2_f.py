@@ -378,3 +378,8 @@ minimization()
 # Min Cost: (Dist;Cost) = (931.0,452860.0)
 # Min Dist: (Dist;Cost) = (927.0,453020.0)
 # 1103.4
+
+####
+# Min Cost: (Dist;Cost) = (306.0,222120.0)
+# Min Dist: (Dist;Cost) = (306.0,222120.0)
+# 311.7

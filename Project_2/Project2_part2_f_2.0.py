@@ -22,14 +22,25 @@ def check_feasiblity(individual):
         return False
     else:
         return True
+
 # Crossover operator
 def greedy_crossover(ind1, ind2):
-    # We must keep the original indiviuals somewhere before scrambling everything
+    ''' 
+    Greedy crossover function produces two new individuals.
+    Determine a city d as a starting point of crossover and set it as the first genetic point in both new individuals.
+    To generate the first new individual find the cities to the right of d (dr1 and dr2 from individual 1 and 2) and calculate the distances 
+    (d, dr1) and (d,dr2), j1 and j2 respectively if j1<j2 put dr1 as the next genetic point and set d = dr1
+    otherwise put dr2 as the next point and set d = dr2, in both cases delete the previous d from the parents
+    then iterate this procedure until there's only one element left each parent parent.
+    To generate the second individual a similar process is used, but instead of the right cities we use left cities
+    and j1 and j2 are the travel cost from d to dl1 and dl2 respectively.
+    '''
+    # We must keep the original indiviuals somewhere to use later on
     temp1, temp2 = ind1.copy(), ind2.copy()
     temp3, temp4 = ind1.copy(), ind2.copy()
 
-    d = temp1[0]
-    ind1, ind2 = [], []
+    d = temp1[0] #set d
+    ind1, ind2 = [], [] # initialize the new individuals
     ind1.append(d)
     
     while len(temp1)>1:
@@ -38,14 +49,14 @@ def greedy_crossover(ind1, ind2):
         except:
             dr1 = temp1[0]
 
-        j1 = cost_distance.iloc[d+1,dr1+1]
+        j1 = cost_distance.iloc[d+1,dr1+1] # get distance between cities of 1st parent 
 
         try:
             dr2 = temp2[temp2.index(d)+1]
         except:
             dr2 = temp2[0]
 
-        j2 = cost_distance.iloc[d+1,dr2+1]
+        j2 = cost_distance.iloc[d+1,dr2+1] # get distance between cities of 2nd parent 
 
         temp1.remove(d)
         temp2.remove(d)
@@ -61,25 +72,23 @@ def greedy_crossover(ind1, ind2):
     ind2.append(d)
     while len(temp3)>1:
         try:
-            dl1 = temp3[temp3.index(d)-1]
-            
+            dl1 = temp3[temp3.index(d)-1]  
         except:
             dl1 = temp3[-1]
 
-        j1 = travel_cost[d+1,dl1+1]
+        j1 = travel_cost[d+1,dl1+1] # get traveling cost between cities of 1st parent 
 
         try:
             dl2 = temp4[temp4.index(d)-1]
-                  
         except:
             dl2 = temp4[-1]
 
-        j2 = travel_cost[d+1,dl2+1]
+        j2 = travel_cost[d+1,dl2+1] # get traveling cost between cities of 2nd parent
 
         temp3.remove(d)
         temp4.remove(d)
 
-        if j1<=j2:
+        if j1>=j2: # here we have j1>=j2 because we want to go first to the cities with a greater travel cost
             ind2.append(dl1)
             d=dl1
         else:
@@ -87,23 +96,35 @@ def greedy_crossover(ind1, ind2):
             d=dl2
 
     return ind1, ind2
+
+
 # Mutation operator    
 def greedy_invert_mutation(ind):
+    '''
+    Greedy invert mutation function produces a new individual.
+    First a city m1 is chosen at random. Then it finds the city m2 with the shortest distance
+    to m1 from the cities to the right of m1. Finally switch the position in the chromosome of the city to right 
+    of m1 with m2.
+    '''
     temp = ind.copy()
     size = len(temp)
-    m1 = temp[random.randint(0, size-2)]
+    m1 = temp[random.randint(0, size-2)] # set m1
     cost = 100000
-    for element in temp[ind.index(m1)+1:]:
+    for element in temp[ind.index(m1)+1:]: # go through cities to the right of m1
         
-        if cost_distance.iloc[m1+1,element+1]<cost: 
+        if cost_distance.iloc[m1+1,element+1]<cost: # verify if new element has a smaller distance
             cost = cost_distance.iloc[m1+1,element+1]
             m2 = element
 
-    ind[ind.index(m2)], ind[ind.index(m1)+1]  = temp[temp.index(m1)+1], temp[temp.index(m2)]     
+    ind[ind.index(m2)], ind[ind.index(m1)+1]  = temp[temp.index(m1)+1], temp[temp.index(m2)]   # position switch
     return ind
 
 # Selection operator
 def Mod_NSGA2(individuals, k, nd='standard'):
+    '''
+    Normal NSGA 2 algorithm with a small modification, where instead of using 
+    the crowding distance in use the Euclidean distance.
+    '''
 
     if nd == 'standard':
         pareto_fronts = tools.sortNondominated(individuals, k)
@@ -114,7 +135,7 @@ def Mod_NSGA2(individuals, k, nd='standard'):
                         'method "{0}" is invalid.'.format(nd))
 
     for front in pareto_fronts:
-        assignEuclDist(front)
+        assignEuclDist(front) # assign Euclidean distance
 
     chosen = list(chain(*pareto_fronts[:-1]))
     k = k - len(chosen)
@@ -125,8 +146,9 @@ def Mod_NSGA2(individuals, k, nd='standard'):
     return chosen
 
 def assignEuclDist(individuals):
-    """Assign a crowding distance to each individual's fitness. The
-    crowding distance can be retrieve via the :attr:`crowding_dist`
+    """
+    Assign a Euclidean distance to each individual's fitness. The
+    Euclidean distance can be retrieve via the :attr:`crowding_dist`
     attribute of each individual's fitness.
     """
     if len(individuals) == 0:
@@ -141,17 +163,21 @@ def assignEuclDist(individuals):
     distances[crowd[-1][1]] = float("inf")
 
     for prev, cur, next in zip(crowd[:-2], crowd[1:-1], crowd[2:]):
-        distances[cur[1]] = np.linalg.norm(np.array(next[0]) - np.array(cur[0])) + np.linalg.norm(np.array(cur[0]) - np.array(prev[0]))
+        distances[cur[1]] = np.linalg.norm(np.array(next[0]) - np.array(cur[0])) + np.linalg.norm(np.array(cur[0]) - np.array(prev[0])) # sum of euclidean distances between current point and its two neighbors
     
     for i, dist in enumerate(distances):
         individuals[i].fitness.crowding_dist = dist
 
 def evaluate(individuals):
+    '''
+    Evaluate function calculates the fitness values for each individual.
+    '''
+    # distance and transport cost vectors initialization
     dist_value=[]
     transp_value=[]
-    limit_orders = 1000
-    dist_value.append(cost_distance.values[0,individuals[0]+1])
-    transp_value.append(cost_distance.values[0,individuals[0]+1] * limit_orders)
+    limit_orders = 1000 
+    dist_value.append(cost_distance.values[0,individuals[0]+1]) # get distance from one location to the next one
+    transp_value.append(cost_distance.values[0,individuals[0]+1] * limit_orders) # get traveling cost from one location to the next one
     for i in range(n_cities-1):
         limit_orders = limit_orders - orders['Orders'][individuals[i]+1] 
         if orders['Orders'][individuals[i+1]+1] > limit_orders :
@@ -164,23 +190,27 @@ def evaluate(individuals):
         transp_value.append(cost_distance.values[individuals[i]+1,individuals[i+1]+1] * limit_orders)
     dist_value.append(cost_distance.values[individuals[n_cities-1]+1,0])
     transp_value.append(cost_distance.values[individuals[n_cities-1]+1,0] * limit_orders)
-    dist_cost = sum(dist_value)
-    transp_cost = sum(transp_value)
+    dist_cost = sum(dist_value) # total distance covered by the individual 
+    transp_cost = sum(transp_value) # total traveling cost of the individual 
     return dist_cost, transp_cost
 
-def minimization():
+def main():
+    '''
+    The main function goes through the whole genetic algorithm that was implemented
+    '''
     runs = 30 #number of runs
     min_min=1000000000
     f1_min = []
     for i in range(runs):
         print(i)
         random.seed(34+i)
-        n_pop= 100
-        CXPB = 1
-        NGEN = 100
-        g=0
+        n_pop= 100 # population size
+        CXPB = 1 # crossover probability
+        NGEN = 100 # number of generations
 
+        g=0 # generation initialization
 
+        #parefront initialization
         PF=tools.ParetoFront()
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -210,16 +240,16 @@ def minimization():
         #pareto front update
         PF.update(population = pop)
 
-        hv = [0]*(NGEN) #init hypervolume saving vector
+        hv = [0]*(NGEN) #initialize hypervolume saving vector
 
-        ref_point = record['max']
+        ref_point = record['max'] # get worst point from first generation and set as reference point for hypervolume calculation
         while g < NGEN-1:
-            g = g + 1
+            g = g + 1 
 
             offspring = tools.selTournamentDCD(pop, len(pop))
             offspring = [toolbox.clone(ind) for ind in offspring]
             
-            # CROSSOVER
+            # Crossover
             for child1, child2 in zip(offspring[::2], offspring[1::2]):
                 if random.random() < CXPB:
                     toolbox.mate(child1, child2)
@@ -250,18 +280,37 @@ def minimization():
         
 
         pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
+        
+        # pareto front plot for one run
         plt.figure()
         plt.title('Pareto curve')
         plt.xlabel('Dist')
         plt.ylabel('Cost')
         plt.scatter(pareto_front_values[:,0],pareto_front_values[:,1], c="r")
 
-        if n_cities == 10:
-            plt.savefig('MOOP_10\Pareto\pareto10_%s.png' % i)
-        elif n_cities == 30:
-            plt.savefig('MOOP_30\Pareto\pareto30_%s.png' % i)
-        else:
-            plt.savefig('MOOP_50\Pareto\pareto50_%s.png' % i)
+        # save plots
+        # if n_cities == 10:
+        #     plt.savefig('MOOP_10\Pareto\pareto10_%s.png' % i)
+        # elif n_cities == 30:
+        #     plt.savefig('MOOP_30\Pareto\pareto30_%s.png' % i)
+        # else:
+        #     plt.savefig('MOOP_50\Pareto\pareto50_%s.png' % i)
+
+        # hypervolume evolution for one run
+        plt.figure()
+        plt.plot(hv)
+        plt.title('Hypervolume evolution curve')
+        plt.xlabel('Generations')
+        plt.ylabel('Hypervolume')
+        # plt.show()
+
+        # save plots
+        # if n_cities == 10:
+        #     plt.savefig('MOOP_10\Hypervolume\Hyperv10_%s.png' % i)
+        # elif n_cities == 30:
+        #     plt.savefig('MOOP_30\Hypervolume\Hyperv30_%s.png' % i)
+        # else:
+        #     plt.savefig('MOOP_50\Hypervolume\Hyperv50_%s.png' % i)
 
         #save best population (taking in account the sum of cost and distance normalized)
         f1, f2 = record['min']
@@ -271,40 +320,20 @@ def minimization():
             min_min = f1/ref_point[0] + f2/ref_point[1]
             hv_best = hv
 
-        plt.figure()
-        plt.plot(hv)
-        plt.title('Hypervolume evolution curve')
-        plt.xlabel('Generations')
-        plt.ylabel('Hypervolume')
-        # plt.show()
-        if n_cities == 10:
-            plt.savefig('MOOP_10\Hypervolume\Hyperv10_%s.png' % i)
-        elif n_cities == 30:
-            plt.savefig('MOOP_30\Hypervolume\Hyperv30_%s.png' % i)
-        else:
-            plt.savefig('MOOP_50\Hypervolume\Hyperv50_%s.png' % i)
-
+        
+    # Plot best pareto solutions and best population
     PF.update(pop_best)
     pareto_front_values = np.array([ind.fitness.values for ind in PF.items])
     plt.title('Pareto curve for the best run')
     plt.xlabel('Dist')
     plt.ylabel('Cost')
-    # # front = np.array([ind.fitness.values for ind in pop_best])
+    # front = np.array([ind.fitness.values for ind in pop_best])
             
-    # # plt.scatter(front[:,0], front[:,1], c="b")
+    # plt.scatter(front[:,0], front[:,1], c="b")
     plt.scatter(pareto_front_values[:,1],pareto_front_values[:,0], c="r")
     # plt.show()
 
-    print("-- End of (successful) evolution --")
-
-    min_dist_idx = np.argmin(pareto_front_values[:,0])
-    min_cost_idx = np.argmin(pareto_front_values[:,1])
-
-    print('\n')
-    print('Min Cost: (Dist;Cost) = (%s,%s)' % (pareto_front_values[min_cost_idx,0],pareto_front_values[min_cost_idx,1]))
-    print('Min Dist: (Dist;Cost) = (%s,%s)' % (pareto_front_values[min_dist_idx,0],pareto_front_values[min_dist_idx,1]))
-
-    #plot hypervolume evolution for the best population
+    # Plot hypervolume evolution for the best population
     plt.figure()
     plt.plot(hv_best)
     plt.title('Hypervolume curve for the best run')
@@ -312,11 +341,22 @@ def minimization():
     plt.ylabel('Hypervolume')
     # # plt.show()
 
-    print(np.mean(f1_min))
+    print("-- End of (successful) evolution --")
+
+    min_dist_idx = np.argmin(pareto_front_values[:,0]) # index where distance is minimum
+    min_cost_idx = np.argmin(pareto_front_values[:,1]) # index where traveling cost is minimum
+
+    print('\n')
+    print('Min Cost: (Dist;Cost) = (%s,%s)' % (pareto_front_values[min_cost_idx,0],pareto_front_values[min_cost_idx,1]))
+    print('Min Dist: (Dist;Cost) = (%s,%s)' % (pareto_front_values[min_dist_idx,0],pareto_front_values[min_dist_idx,1]))
+
+
+    # print(np.mean(f1_min)) # average of minimum distances over all runs 
     return
 
 
 ################################################################################################  MAIN  ################################################################################################
+# Get user input
 write = True
 while write:
     print('How many cities will the problem have (10, 30 or 50)?\n')
@@ -326,25 +366,29 @@ while write:
     else:
         write = False
 
-
+# Get problem data
 cost_distance = pd.read_csv('CustDist_WHCentral.csv', header= 0, names =  np.arange(51))
 location = pd.read_csv('CustXY_WHCentral.csv')
 orders = pd.read_csv('CustOrd.csv')
+
+# Generate travel cost matrix
 a = cost_distance.iloc[:n_cities+1,:n_cities+1].to_numpy()
 b = orders["Orders"].iloc[:n_cities+1].to_numpy()*np.identity(n_cities+1)
 travel_cost = np.matmul(a, b)
 
-################################  MINIMIZATION CLASS  ###################################
+################################  PROBLEM OBJECTIVE  ################################
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0))
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
-###############################  CREATING POPULATION  ######################################
+################################  POPULATION  ################################
 
 toolbox = base.Toolbox()
-toolbox.register('Genes', random.sample, range(0,n_cities), n_cities )
+toolbox.register('Genes', random.sample, range(0,n_cities), n_cities)
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.Genes)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+################################ OPERATORS ################################
 
 toolbox.register("evaluate", evaluate)
 toolbox.decorate("evaluate", tools.DeltaPenalty(check_feasiblity, 10000)) 
@@ -352,10 +396,6 @@ toolbox.register("mate", greedy_crossover)
 toolbox.register("mutate", greedy_invert_mutation)  
 toolbox.register("select", Mod_NSGA2)
 
+################################ MINIMIZATION ################################
 
-
-minimization()
-
-
- 
- 
+main()

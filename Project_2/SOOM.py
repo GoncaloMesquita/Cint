@@ -120,8 +120,7 @@ def heuristic(ware_location):
     heu_individual_left =x_left.sort_values(by=[y])                                 #Sort those customers by lower to higher in the vertical axis only on for the costumers in the left side
     x_right = location_aux[location_aux[x] > max_x/2]                               # Getting the customers only located in the right side of the map
     heu_individual_right = x_right.sort_values(by=[y], ascending=False)             #Sort those customers by higher to lower in the vertical axis only on for the costumers in the left side
-    heu_individual = heu_individual_left['Customer XY'].append( heu_individual_right['Customer XY']).tolist()  #Join both sorted vectors to create the individual
-
+    heu_individual = pd.concat([heu_individual_left['Customer XY'], heu_individual_right['Customer XY']]).tolist()  #Join both sorted vectors to create the individual
     return  [x-1 for x in heu_individual]
 
 def minimization(iterations, number_cities, wareh, t_order, heu ):
@@ -252,8 +251,7 @@ def minimization(iterations, number_cities, wareh, t_order, heu ):
     #Getting the mean and stander deviation and mean from the minimums of all the runs
     print('\nMean of the 30 runs: ',sum(mean)/len(mean))
     print('Standar deviation of the 30 runs: ',np.std(mean))
-    print('The individual of the best run ', best_individual )
-    print('Fitness of the best run', best_fit)
+    print('The individual of the best run ', best_individual)
 
     return min_run, name
 
@@ -294,6 +292,6 @@ plt.plot(best_min_run, label = name_case)
 plt.xlabel('#Generations')
 plt.ylabel('Total Distance for the best run')
 plt.legend(loc='upper right')
-plt.title('Convergence Curve for %s customers', n_customers)
+plt.title('Convergence Curve for %i customers' %n_customers)
 plt.show()
 
